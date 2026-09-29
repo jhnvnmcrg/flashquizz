@@ -1,0 +1,217 @@
+{
+  "source": { "slug": "sample", "name": "Sample fixture", "shortName": "Sample" },
+  "questions": [
+    {
+      "sourceRef": "sample:001",
+      "module": "m4",
+      "topicSlug": "m4-autonomic",
+      "ordinal": 1,
+      "printedNumber": "1",
+      "format": "single",
+      "stem": "Which drug is the treatment of choice for anaphylaxis?",
+      "choices": [
+        { "key": "A", "text": "Diphenhydramine" },
+        { "key": "B", "text": "Ephedrine" },
+        { "key": "C", "text": "Epinephrine" },
+        { "key": "D", "text": "Methylprednisolone" }
+      ],
+      "answerKey": "C",
+      "rationale": "Epinephrine reverses bronchoconstriction and hypotension through **α1** and **β2** effects.\n\n- Antihistamines and steroids are adjuncts only.",
+      "mnemonic": ""
+    },
+    {
+      "sourceRef": "sample:002",
+      "module": "m4",
+      "topicSlug": "m4-autonomic",
+      "ordinal": 2,
+      "printedNumber": "2",
+      "format": "except",
+      "stem": "The following are effects of parasympathetic stimulation, **EXCEPT**:",
+      "choices": [
+        { "key": "A", "text": "Miosis" },
+        { "key": "B", "text": "Bronchoconstriction" },
+        { "key": "C", "text": "Increased intestinal motility" },
+        { "key": "D", "text": "Decreased renal blood flow" }
+      ],
+      "answerKey": "D",
+      "rationale": "| Parasympathetic | Sympathetic |\n|---|---|\n| Miosis | Mydriasis |\n| Bronchoconstriction | Bronchodilation |\n| ↑ GI motility | ↓ GI motility |",
+      "mnemonic": "DUMBELS — Diarrhea, Urination, Miosis, Bronchospasm, Emesis, Lacrimation, Salivation"
+    },
+    {
+      "sourceRef": "sample:003",
+      "module": "m2",
+      "topicSlug": "m2-cell-biology",
+      "ordinal": 3,
+      "printedNumber": "3",
+      "format": "roman_combo",
+      "stem": "Which of the following statements about prokaryotes are true?",
+      "statements": [
+        { "label": "I", "text": "All prokaryotes have a cell membrane." },
+        { "label": "II", "text": "Prokaryotes lack endoplasmic reticulum." },
+        { "label": "III", "text": "Prokaryotes have 80S ribosomes." },
+        { "label": "IV", "text": "Prokaryotic DNA is enclosed in a nucleus." }
+      ],
+      "choices": [
+        { "key": "A", "text": "I and II" },
+        { "key": "B", "text": "II and III" },
+        { "key": "C", "text": "III and IV" },
+        { "key": "D", "text": "I and IV" }
+      ],
+      "answerKey": "A",
+      "rationale": "Prokaryotes have **70S** ribosomes (50S + 30S) and a nucleoid, not a nucleus."
+    },
+    {
+      "sourceRef": "sample:004",
+      "module": "m2",
+      "topicSlug": "m2-metabolism",
+      "ordinal": 4,
+      "printedNumber": "4",
+      "format": "two_statement",
+      "stem": "Evaluate the two statements.",
+      "statements": [
+        { "label": "I", "text": "The Calvin cycle occurs in the thylakoid membranes." },
+        { "label": "II", "text": "Glucose is the main product of the Calvin cycle." }
+      ],
+      "choices": [
+        { "key": "A", "text": "Both statements are true" },
+        { "key": "B", "text": "First statement is false, second is true" },
+        { "key": "C", "text": "First statement is true, second is false" },
+        { "key": "D", "text": "Both statements are false" }
+      ],
+      "answerKey": "B",
+      "rationale": "The Calvin cycle occurs in the **stroma** of the chloroplast."
+    },
+    {
+      "sourceRef": "sample:005",
+      "module": "m3",
+      "topicSlug": "m3-pharm-calc",
+      "ordinal": 5,
+      "printedNumber": "5",
+      "format": "computation",
+      "stem": "How many mL will you dispense for a prescription calling for 100 g of a liquid with a specific gravity of 1.25?",
+      "choices": [
+        { "key": "A", "text": "75 mL" },
+        { "key": "B", "text": "80 mL" },
+        { "key": "C", "text": "85 mL" },
+        { "key": "D", "text": "90 mL" }
+      ],
+      "answerKey": "B",
+      "rationale": "V = mass ÷ SG = 100 g ÷ 1.25 g/mL = **80 mL**"
+    },
+    {
+      "sourceRef": "sample:006",
+      "module": "m1",
+      "topicSlug": "m1-inorganic-chem",
+      "ordinal": 6,
+      "printedNumber": "6",
+      "groupKey": "sample:g006",
+      "groupOrder": 1,
+      "context": "For numbers 6–8, match each glass property with the additive responsible.",
+      "format": "matching",
+      "stem": "Increases the refractive index of glass",
+      "choices": [
+        { "key": "A", "text": "Iron" },
+        { "key": "B", "text": "Borates" },
+        { "key": "C", "text": "Potassium" },
+        { "key": "D", "text": "Lead" }
+      ],
+      "answerKey": "D"
+    },
+    {
+      "sourceRef": "sample:007",
+      "module": "m1",
+      "topicSlug": "m1-inorganic-chem",
+      "ordinal": 7,
+      "printedNumber": "7",
+      "groupKey": "sample:g006",
+      "groupOrder": 2,
+      "context": "For numbers 6–8, match each glass property with the additive responsible.",
+      "format": "matching",
+      "stem": "Decreases the coefficient of expansion of glass",
+      "choices": [
+        { "key": "A", "text": "Iron" },
+        { "key": "B", "text": "Borates" },
+        { "key": "C", "text": "Potassium" },
+        { "key": "D", "text": "Lead" }
+      ],
+      "answerKey": "B"
+    },
+    {
+      "sourceRef": "sample:008",
+      "module": "m1",
+      "topicSlug": "m1-inorganic-chem",
+      "ordinal": 8,
+      "printedNumber": "8",
+      "groupKey": "sample:g006",
+      "groupOrder": 3,
+      "context": "For numbers 6–8, match each glass property with the additive responsible.",
+      "format": "matching",
+      "stem": "Light-resistant (amber) property",
+      "choices": [
+        { "key": "A", "text": "Iron" },
+        { "key": "B", "text": "Borates" },
+        { "key": "C", "text": "Potassium" },
+        { "key": "D", "text": "Lead" }
+      ],
+      "answerKey": "A",
+      "rationale": "Amber glass owes its colour to **iron and manganese** oxides."
+    },
+    {
+      "sourceRef": "sample:009",
+      "module": "m6",
+      "topicSlug": "m6-bacteriology",
+      "ordinal": 9,
+      "printedNumber": "9",
+      "format": "single",
+      "stem": "A goat farmer presents with undulant fever. Which organism is most likely responsible?",
+      "choices": [
+        { "key": "A", "text": "Brucella melitensis" },
+        { "key": "B", "text": "Francisella tularensis" },
+        { "key": "C", "text": "Pasteurella multocida" },
+        { "key": "D", "text": "Bartonella henselae" },
+        { "key": "E", "text": "None of the above" }
+      ],
+      "answerKey": "A",
+      "rationale": "- *Brucella melitensis* → brucellosis (goats)\n- *Francisella tularensis* → rabbit fever\n- *Bartonella henselae* → cat scratch disease"
+    },
+    {
+      "sourceRef": "sample:010",
+      "module": "m1",
+      "topicSlug": "m1-medicinal-chem",
+      "ordinal": 10,
+      "printedNumber": "10",
+      "format": "single",
+      "stem": "Identify the drug class of the structure shown.",
+      "choices": [
+        { "key": "A", "text": "Antifungal" },
+        { "key": "B", "text": "Antihypertensive" },
+        { "key": "C", "text": "Antipsychotic" },
+        { "key": "D", "text": "Antineoplastic" }
+      ],
+      "answerKey": "D",
+      "requiresImage": true,
+      "flags": ["image_required"],
+      "status": "needs_review",
+      "reviewNote": "Structure image was not extracted; attach it in the editor."
+    },
+    {
+      "sourceRef": "sample:011",
+      "module": "m5",
+      "topicSlug": "m5-laws-ethics",
+      "ordinal": 11,
+      "printedNumber": "11",
+      "format": "single",
+      "stem": "RA 9165 is also known as:",
+      "choices": [
+        { "key": "A", "text": "The Generics Act" },
+        { "key": "B", "text": "Special Law on Counterfeit Drugs" },
+        { "key": "C", "text": "Universally Accessible Cheaper Medicines Act" },
+        { "key": "D", "text": "Comprehensive Dangerous Drugs Act" }
+      ],
+      "answerKey": null,
+      "flags": ["answer_missing"],
+      "status": "needs_review",
+      "reviewNote": "Answer letter unreadable in the source."
+    }
+  ]
+}

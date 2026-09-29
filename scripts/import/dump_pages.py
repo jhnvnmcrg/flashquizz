@@ -1,0 +1,68 @@
+"""Dump scanned reviewer PDFs to page images for transcription.
+
+Usage:  py -3.12 scripts/import/dump_pages.py [source ...]
+Writes: data/pages/<source>/p###.jpg (and data/pages/jfif/*.jpg)
+
+Pages that are a single embedded JPEG are written losslessly; low-resolution
+scans are re-rendered at a higher zoom so small text stays legible.
+"""
+
+from __future__ import annotations
+
+import shutil
+import sys
+from pathlib import Path
+
+import pymupdf
+
+ROOT = Path(__file__).resolve().parents[2]
+REVIEWER = ROOT / "reviewer"
+PAGES = ROOT / "data" / "pages"
+
+SOURCES = {
+    "m3fc": {"file": "M3 Final Coaching.pdf", "zoom": 2.0},
+    "m1fpb": {"file": "M1-FPB.pdf", "zoom": None},
+    "m3fpb": {"file": "Module 3 FPB.pdf", "zoom": None},
+    "m4fpr": {"file": "MODULE 4FPR.pdf", "zoom": None},
+}
+
+
+def dump(source: str, cfg: dict) -> None:
+    out = PAGES / source
+    out.mkdir(parents=True, exist_ok=True)
+    doc = pymupdf.open(REVIEWER / cfg["file"])
+    for pno in range(doc.page_count):
+        page = doc[pno]
+        target = out / f"p{pno + 1:03d}.jpg"
+        imgs = page.get_images(full=True)
+        if cfg["zoom"] is None and len(imgs) == 1:
+            info = doc.extract_image(imgs[0][0])
+            if info["ext"] in ("jpeg", "jpg"):
+                target.write_bytes(info["image"])
+                continue
+        zoom = cfg["zoom"] or 1.5
+        pix = page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom))
+        pix.save(target, jpg_quality=88)
+    print(f"{source}: {doc.page_count} pages -> {out}")
+
+
+def copy_jfif() -> None:
+    out = PAGES / "jfif"
+    out.mkdir(parents=True, exist_ok=True)
+    for f in sorted(REVIEWER.glob("*.jfif")):
+        shutil.copyfile(f, out / (f.stem + ".jpg"))
+    print(f"jfif: {len(list(out.iterdir()))} images -> {out}")
+
+
+def main(argv: list[str]) -> None:
+    for source in argv or list(SOURCES):
+        if source == "jfif":
+            copy_jfif()
+        else:
+            dump(source, SOURCES[source])
+    if not argv:
+        copy_jfif()
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

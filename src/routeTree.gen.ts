@@ -9,68 +9,466 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as McpRouteImport } from './routes/mcp'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as ForbiddenRouteImport } from './routes/forbidden'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
+import { Route as AppReviewRouteImport } from './routes/_app/review'
+import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
+import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
+import { Route as AppAdminReviewRouteImport } from './routes/_app/admin/review'
+import { Route as AppAdminTaxonomyRouteImport } from './routes/_app/admin/taxonomy'
+import { Route as AppExamIndexRouteImport } from './routes/_app/exam/index'
+import { Route as AppModulesModuleSlugRouteImport } from './routes/_app/modules/$moduleSlug'
+import { Route as AppStudyNewRouteImport } from './routes/_app/study/new'
+import { Route as ApiImagesImageIdRouteImport } from './routes/api/images.$imageId'
+import { Route as AppAdminQuestionsIndexRouteImport } from './routes/_app/admin/questions/index'
+import { Route as AppAdminQuestionsQuestionIdRouteImport } from './routes/_app/admin/questions/$questionId'
+import { Route as AppAdminQuestionsNewRouteImport } from './routes/_app/admin/questions/new'
+import { Route as AppExamSessionIdIndexRouteImport } from './routes/_app/exam/$sessionId/index'
+import { Route as AppExamSessionIdResultsRouteImport } from './routes/_app/exam/$sessionId/results'
+import { Route as AppStudySessionIdIndexRouteImport } from './routes/_app/study/$sessionId/index'
+import { Route as AppStudySessionIdSummaryRouteImport } from './routes/_app/study/$sessionId/summary'
 
-const IndexRoute = IndexRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForbiddenRoute = ForbiddenRouteImport.update({
+  id: '/forbidden',
+  path: '/forbidden',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReviewRoute = AppReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => AppRoute,
+} as any)
+const SignInSplatRoute = SignInSplatRouteImport.update({
+  id: '/sign-in/$',
+  path: '/sign-in/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminReviewRoute = AppAdminReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminTaxonomyRoute = AppAdminTaxonomyRouteImport.update({
+  id: '/taxonomy',
+  path: '/taxonomy',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppExamIndexRoute = AppExamIndexRouteImport.update({
+  id: '/exam/',
+  path: '/exam/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppModulesModuleSlugRoute = AppModulesModuleSlugRouteImport.update({
+  id: '/modules/$moduleSlug',
+  path: '/modules/$moduleSlug',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStudyNewRoute = AppStudyNewRouteImport.update({
+  id: '/study/new',
+  path: '/study/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const ApiImagesImageIdRoute = ApiImagesImageIdRouteImport.update({
+  id: '/api/images/$imageId',
+  path: '/api/images/$imageId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppAdminQuestionsIndexRoute = AppAdminQuestionsIndexRouteImport.update({
+  id: '/questions/',
+  path: '/questions/',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminQuestionsQuestionIdRoute =
+  AppAdminQuestionsQuestionIdRouteImport.update({
+    id: '/questions/$questionId',
+    path: '/questions/$questionId',
+    getParentRoute: () => AppAdminRouteRoute,
+  } as any)
+const AppAdminQuestionsNewRoute = AppAdminQuestionsNewRouteImport.update({
+  id: '/questions/new',
+  path: '/questions/new',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppExamSessionIdIndexRoute = AppExamSessionIdIndexRouteImport.update({
+  id: '/exam/$sessionId/',
+  path: '/exam/$sessionId/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppExamSessionIdResultsRoute = AppExamSessionIdResultsRouteImport.update({
+  id: '/exam/$sessionId/results',
+  path: '/exam/$sessionId/results',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStudySessionIdIndexRoute = AppStudySessionIdIndexRouteImport.update({
+  id: '/study/$sessionId/',
+  path: '/study/$sessionId/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStudySessionIdSummaryRoute =
+  AppStudySessionIdSummaryRouteImport.update({
+    id: '/study/$sessionId/summary',
+    path: '/study/$sessionId/summary',
+    getParentRoute: () => AppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/mcp': typeof McpRoute
+  '/': typeof AppIndexRoute
+  '/forbidden': typeof ForbiddenRoute
+  '/admin': typeof AppAdminRouteRouteWithChildren
+  '/review': typeof AppReviewRoute
+  '/sign-in/$': typeof SignInSplatRoute
+  '/admin/review': typeof AppAdminReviewRoute
+  '/admin/taxonomy': typeof AppAdminTaxonomyRoute
+  '/modules/$moduleSlug': typeof AppModulesModuleSlugRoute
+  '/study/new': typeof AppStudyNewRoute
+  '/api/images/$imageId': typeof ApiImagesImageIdRoute
+  '/admin/': typeof AppAdminIndexRoute
+  '/exam/': typeof AppExamIndexRoute
+  '/admin/questions/$questionId': typeof AppAdminQuestionsQuestionIdRoute
+  '/admin/questions/new': typeof AppAdminQuestionsNewRoute
+  '/exam/$sessionId/results': typeof AppExamSessionIdResultsRoute
+  '/study/$sessionId/summary': typeof AppStudySessionIdSummaryRoute
+  '/admin/questions/': typeof AppAdminQuestionsIndexRoute
+  '/exam/$sessionId/': typeof AppExamSessionIdIndexRoute
+  '/study/$sessionId/': typeof AppStudySessionIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/mcp': typeof McpRoute
+  '/forbidden': typeof ForbiddenRoute
+  '/review': typeof AppReviewRoute
+  '/sign-in/$': typeof SignInSplatRoute
+  '/': typeof AppIndexRoute
+  '/admin/review': typeof AppAdminReviewRoute
+  '/admin/taxonomy': typeof AppAdminTaxonomyRoute
+  '/modules/$moduleSlug': typeof AppModulesModuleSlugRoute
+  '/study/new': typeof AppStudyNewRoute
+  '/api/images/$imageId': typeof ApiImagesImageIdRoute
+  '/admin': typeof AppAdminIndexRoute
+  '/exam': typeof AppExamIndexRoute
+  '/admin/questions/$questionId': typeof AppAdminQuestionsQuestionIdRoute
+  '/admin/questions/new': typeof AppAdminQuestionsNewRoute
+  '/exam/$sessionId/results': typeof AppExamSessionIdResultsRoute
+  '/study/$sessionId/summary': typeof AppStudySessionIdSummaryRoute
+  '/admin/questions': typeof AppAdminQuestionsIndexRoute
+  '/exam/$sessionId': typeof AppExamSessionIdIndexRoute
+  '/study/$sessionId': typeof AppStudySessionIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/mcp': typeof McpRoute
+  '/_app': typeof AppRouteWithChildren
+  '/forbidden': typeof ForbiddenRoute
+  '/_app/admin': typeof AppAdminRouteRouteWithChildren
+  '/_app/review': typeof AppReviewRoute
+  '/sign-in/$': typeof SignInSplatRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/admin/review': typeof AppAdminReviewRoute
+  '/_app/admin/taxonomy': typeof AppAdminTaxonomyRoute
+  '/_app/modules/$moduleSlug': typeof AppModulesModuleSlugRoute
+  '/_app/study/new': typeof AppStudyNewRoute
+  '/api/images/$imageId': typeof ApiImagesImageIdRoute
+  '/_app/admin/': typeof AppAdminIndexRoute
+  '/_app/exam/': typeof AppExamIndexRoute
+  '/_app/admin/questions/$questionId': typeof AppAdminQuestionsQuestionIdRoute
+  '/_app/admin/questions/new': typeof AppAdminQuestionsNewRoute
+  '/_app/exam/$sessionId/results': typeof AppExamSessionIdResultsRoute
+  '/_app/study/$sessionId/summary': typeof AppStudySessionIdSummaryRoute
+  '/_app/admin/questions/': typeof AppAdminQuestionsIndexRoute
+  '/_app/exam/$sessionId/': typeof AppExamSessionIdIndexRoute
+  '/_app/study/$sessionId/': typeof AppStudySessionIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/mcp'
+  fullPaths:
+    | '/'
+    | '/forbidden'
+    | '/admin'
+    | '/review'
+    | '/sign-in/$'
+    | '/admin/review'
+    | '/admin/taxonomy'
+    | '/modules/$moduleSlug'
+    | '/study/new'
+    | '/api/images/$imageId'
+    | '/admin/'
+    | '/exam/'
+    | '/admin/questions/$questionId'
+    | '/admin/questions/new'
+    | '/exam/$sessionId/results'
+    | '/study/$sessionId/summary'
+    | '/admin/questions/'
+    | '/exam/$sessionId/'
+    | '/study/$sessionId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/mcp'
-  id: '__root__' | '/' | '/mcp'
+  to:
+    | '/forbidden'
+    | '/review'
+    | '/sign-in/$'
+    | '/'
+    | '/admin/review'
+    | '/admin/taxonomy'
+    | '/modules/$moduleSlug'
+    | '/study/new'
+    | '/api/images/$imageId'
+    | '/admin'
+    | '/exam'
+    | '/admin/questions/$questionId'
+    | '/admin/questions/new'
+    | '/exam/$sessionId/results'
+    | '/study/$sessionId/summary'
+    | '/admin/questions'
+    | '/exam/$sessionId'
+    | '/study/$sessionId'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/forbidden'
+    | '/_app/admin'
+    | '/_app/review'
+    | '/sign-in/$'
+    | '/_app/'
+    | '/_app/admin/review'
+    | '/_app/admin/taxonomy'
+    | '/_app/modules/$moduleSlug'
+    | '/_app/study/new'
+    | '/api/images/$imageId'
+    | '/_app/admin/'
+    | '/_app/exam/'
+    | '/_app/admin/questions/$questionId'
+    | '/_app/admin/questions/new'
+    | '/_app/exam/$sessionId/results'
+    | '/_app/study/$sessionId/summary'
+    | '/_app/admin/questions/'
+    | '/_app/exam/$sessionId/'
+    | '/_app/study/$sessionId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  McpRoute: typeof McpRoute
+  AppRoute: typeof AppRouteWithChildren
+  ForbiddenRoute: typeof ForbiddenRoute
+  SignInSplatRoute: typeof SignInSplatRoute
+  ApiImagesImageIdRoute: typeof ApiImagesImageIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
+    '/forbidden': {
+      id: '/forbidden'
+      path: '/forbidden'
+      fullPath: '/forbidden'
+      preLoaderRoute: typeof ForbiddenRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/review': {
+      id: '/_app/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof AppReviewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/sign-in/$': {
+      id: '/sign-in/$'
+      path: '/sign-in/$'
+      fullPath: '/sign-in/$'
+      preLoaderRoute: typeof SignInSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/admin/': {
+      id: '/_app/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/review': {
+      id: '/_app/admin/review'
+      path: '/review'
+      fullPath: '/admin/review'
+      preLoaderRoute: typeof AppAdminReviewRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/taxonomy': {
+      id: '/_app/admin/taxonomy'
+      path: '/taxonomy'
+      fullPath: '/admin/taxonomy'
+      preLoaderRoute: typeof AppAdminTaxonomyRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/exam/': {
+      id: '/_app/exam/'
+      path: '/exam'
+      fullPath: '/exam/'
+      preLoaderRoute: typeof AppExamIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/modules/$moduleSlug': {
+      id: '/_app/modules/$moduleSlug'
+      path: '/modules/$moduleSlug'
+      fullPath: '/modules/$moduleSlug'
+      preLoaderRoute: typeof AppModulesModuleSlugRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/study/new': {
+      id: '/_app/study/new'
+      path: '/study/new'
+      fullPath: '/study/new'
+      preLoaderRoute: typeof AppStudyNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/api/images/$imageId': {
+      id: '/api/images/$imageId'
+      path: '/api/images/$imageId'
+      fullPath: '/api/images/$imageId'
+      preLoaderRoute: typeof ApiImagesImageIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/admin/questions/': {
+      id: '/_app/admin/questions/'
+      path: '/questions'
+      fullPath: '/admin/questions/'
+      preLoaderRoute: typeof AppAdminQuestionsIndexRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/questions/$questionId': {
+      id: '/_app/admin/questions/$questionId'
+      path: '/questions/$questionId'
+      fullPath: '/admin/questions/$questionId'
+      preLoaderRoute: typeof AppAdminQuestionsQuestionIdRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/questions/new': {
+      id: '/_app/admin/questions/new'
+      path: '/questions/new'
+      fullPath: '/admin/questions/new'
+      preLoaderRoute: typeof AppAdminQuestionsNewRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/exam/$sessionId/': {
+      id: '/_app/exam/$sessionId/'
+      path: '/exam/$sessionId'
+      fullPath: '/exam/$sessionId/'
+      preLoaderRoute: typeof AppExamSessionIdIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/exam/$sessionId/results': {
+      id: '/_app/exam/$sessionId/results'
+      path: '/exam/$sessionId/results'
+      fullPath: '/exam/$sessionId/results'
+      preLoaderRoute: typeof AppExamSessionIdResultsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/study/$sessionId/': {
+      id: '/_app/study/$sessionId/'
+      path: '/study/$sessionId'
+      fullPath: '/study/$sessionId/'
+      preLoaderRoute: typeof AppStudySessionIdIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/study/$sessionId/summary': {
+      id: '/_app/study/$sessionId/summary'
+      path: '/study/$sessionId/summary'
+      fullPath: '/study/$sessionId/summary'
+      preLoaderRoute: typeof AppStudySessionIdSummaryRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
 
+interface AppAdminRouteRouteChildren {
+  AppAdminReviewRoute: typeof AppAdminReviewRoute
+  AppAdminTaxonomyRoute: typeof AppAdminTaxonomyRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
+  AppAdminQuestionsQuestionIdRoute: typeof AppAdminQuestionsQuestionIdRoute
+  AppAdminQuestionsNewRoute: typeof AppAdminQuestionsNewRoute
+  AppAdminQuestionsIndexRoute: typeof AppAdminQuestionsIndexRoute
+}
+
+const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminReviewRoute: AppAdminReviewRoute,
+  AppAdminTaxonomyRoute: AppAdminTaxonomyRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
+  AppAdminQuestionsQuestionIdRoute: AppAdminQuestionsQuestionIdRoute,
+  AppAdminQuestionsNewRoute: AppAdminQuestionsNewRoute,
+  AppAdminQuestionsIndexRoute: AppAdminQuestionsIndexRoute,
+}
+
+const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
+  AppAdminRouteRouteChildren,
+)
+
+interface AppRouteChildren {
+  AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
+  AppReviewRoute: typeof AppReviewRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppModulesModuleSlugRoute: typeof AppModulesModuleSlugRoute
+  AppStudyNewRoute: typeof AppStudyNewRoute
+  AppExamIndexRoute: typeof AppExamIndexRoute
+  AppExamSessionIdResultsRoute: typeof AppExamSessionIdResultsRoute
+  AppStudySessionIdSummaryRoute: typeof AppStudySessionIdSummaryRoute
+  AppExamSessionIdIndexRoute: typeof AppExamSessionIdIndexRoute
+  AppStudySessionIdIndexRoute: typeof AppStudySessionIdIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
+  AppReviewRoute: AppReviewRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppModulesModuleSlugRoute: AppModulesModuleSlugRoute,
+  AppStudyNewRoute: AppStudyNewRoute,
+  AppExamIndexRoute: AppExamIndexRoute,
+  AppExamSessionIdResultsRoute: AppExamSessionIdResultsRoute,
+  AppStudySessionIdSummaryRoute: AppStudySessionIdSummaryRoute,
+  AppExamSessionIdIndexRoute: AppExamSessionIdIndexRoute,
+  AppStudySessionIdIndexRoute: AppStudySessionIdIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  McpRoute: McpRoute,
+  AppRoute: AppRouteWithChildren,
+  ForbiddenRoute: ForbiddenRoute,
+  SignInSplatRoute: SignInSplatRoute,
+  ApiImagesImageIdRoute: ApiImagesImageIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
