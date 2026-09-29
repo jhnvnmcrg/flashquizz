@@ -153,6 +153,58 @@ transcribe. There is no raw block, so:
 - Page split between agents: handle every question whose **first** slide/page is
   inside your page range, even if it continues onto the next range.
 
+## Unkeyed sources (m4drill, m5notes, calc) — you supply the answer
+
+These sources have no reliable answer key, so **you work out the answer**.
+Accuracy matters more than speed: reason it through as a pharmacist would,
+using standard references (Katzung, Remington, USP, Ansel, Philippine laws).
+
+Every question from these sources gets:
+- `flags` including `ai_answer` (and `ai_choices` if you wrote the choices),
+- `status: "needs_review"` (the owner verifies before it reaches study),
+- a `reviewNote` stating where the key came from and anything the owner should
+  check, e.g. `"No key in source; Claude's answer C. Student circled D (wrong: …)."`
+  or `"Highlighted answer B matches Claude's answer."`,
+- a `rationale` you write: 1–4 short bullets or a worked solution that explains
+  why the answer is right (and, when useful, why the tempting distractor is wrong).
+- If you are genuinely unsure between two choices, pick the better-supported one,
+  add `answer_disputed`, and name the alternative + reason in `reviewNote`.
+
+Source specifics:
+- **m4drill** (`MODULE 4- Drill 1.pdf`, pages `data/pages/m4drill/p00N.jpg`,
+  module `m4`): typed MCQs a–d in a two-column table, 100 items. Pen circles,
+  ticks and strike-throughs are a **student's** attempts and are often wrong —
+  record them in `raw.answer` ("student circled d") but do not trust them.
+  `sourceRef` `m4drill:<nnn>` (printed number).
+- **m5notes** (`Module 5.pdf`, pages `data/pages/m5notes/p00N.jpg`, module `m5`):
+  a Module 5 questionnaire (printed numbers from ~116 up) annotated by a student:
+  **green highlighter** marks a chosen answer, pasted screenshots are reference
+  notes, handwriting is notes. Treat the green highlight as a candidate key:
+  verify it; if you agree say so in `reviewNote`, if you disagree use your answer
+  and explain. Use pasted notes as rationale material when relevant.
+  `sourceRef` `m5notes:<nnn>` (printed number).
+- **calc** (`4-Annotated Pharmaceutical Calculations Handout.pdf`; typed text in
+  `data/raw/calc.txt` with `=== page N ===` markers, page images in
+  `data/pages/calc/p###.jpg`), module `m3`, topic `m3-pharm-calc`, format
+  `computation`:
+  - Lecture pages 1–127 contain worked **examples** (typed problem, handwritten
+    answer that is often illegible). `sourceRef` `calc:ex<page 3 digits>-<n>`
+    (n = order on that page), `ordinal` = page × 10 + n, `printedNumber` null.
+    If the handwritten answer is legible, compare it with yours in `reviewNote`.
+  - Practice pages 129–154 ("PROBLEMA NA NAMAN!!") list numbered problems with
+    no choices and no answers. `sourceRef` `calc:p<page 3 digits>-<n>` (n = the
+    printed number), `ordinal` = page × 10 + n, `printedNumber` = n.
+  - **Write 4 choices A–D** (flag `ai_choices`): the correct value plus three
+    distractors built from realistic mistakes (inverted ratio, wrong conversion
+    factor such as 454 vs 453.6 g/lb or 30 vs 29.57 mL/fl oz, off by ×10/×1000,
+    forgetting a step). Same units and rounding style in all four. **Spread the
+    correct letter across A–D** — do not always put it first.
+  - Put the full step-by-step solution in `rationale` (show the setup, the
+    conversion factors used and the arithmetic; state the rounding).
+  - Roman-numeral items: "Express 2332 in Roman numerals." / "Caps. no. xlv —
+    how many capsules?" with numeric or Roman choices.
+  - Skip lecture content that is not a problem (definitions, rules, tables).
+
 ## Topic slugs by module
 
 - **m1**: m1-general-chem, m1-organic-chem, m1-medicinal-chem, m1-inorganic-chem, m1-radiopharma-gases, m1-qualitative-analysis

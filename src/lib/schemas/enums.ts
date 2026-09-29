@@ -39,6 +39,8 @@ export const QUESTION_FLAGS = [
   'rationale_missing',
   'answer_disputed',
   'rationale_disputed',
+  'ai_answer',
+  'ai_choices',
 ] as const
 export const STATEMENT_LABELS = ['I', 'II', 'III', 'IV', 'V', 'VI'] as const
 
@@ -76,6 +78,8 @@ export const FLAG_LABELS: Record<QuestionFlag, string> = {
   rationale_missing: 'Rationale missing',
   answer_disputed: 'Answer may be wrong',
   rationale_disputed: 'Rationale may contain an error',
+  ai_answer: 'Answer worked out by Claude',
+  ai_choices: 'Choices written by Claude',
 }
 
 export const STATUS_LABELS: Record<QuestionStatus, string> = {
