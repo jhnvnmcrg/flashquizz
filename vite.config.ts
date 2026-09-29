@@ -12,7 +12,11 @@ const config = defineConfig({
   resolve: { tsconfigPaths: true },
   plugins: [
     devtools(),
-    nitro(),
+    nitro({
+      // Run Vercel functions in Singapore, next to the Neon database
+      // (ap-southeast-1). Written into the function's .vc-config.json.
+      vercel: { functions: { regions: ['sin1'] } },
+    }),
     tailwindcss(),
     tanstackStart(),
     viteReact(),
