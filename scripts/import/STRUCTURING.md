@@ -205,6 +205,33 @@ Source specifics:
     how many capsules?" with numeric or Roman choices.
   - Skip lecture content that is not a problem (definitions, rules, tables).
 
+## Reference-note tables (notes) — you write the questions
+
+Eight screenshots of reviewer reference tables, cleaned up in
+`data/images/notes/notes-<table>.jpg` (originals in `data/pages/jfif/`). They
+contain no questions, so you **write** board-style MCQs that test the facts in
+each table.
+
+- Source header `"source": { "slug": "notes", "name": "Reviewer reference notes", "shortName": "Notes" }`.
+- `sourceRef` `notes:<table>-<nn>` (e.g. `notes:antifungals-03`), `ordinal` =
+  table number × 100 + n, `printedNumber` null, `sourcePage` null.
+- Every question: flags `ai_answer` + `ai_choices`, status `needs_review`,
+  reviewNote `"Written by Claude from the <table> reference table."` plus any caveat.
+- Attach the table image with `role: "rationale"` (shown only after answering, so
+  it doesn't give the answer away) and a short `alt`.
+- Rationale: the relevant rows retyped (Markdown table or bullets), plus a line
+  on why the distractors are wrong. Keep the table's mnemonics in `mnemonic`.
+- Only test what the table states. Where the table is wrong or oversimplified
+  versus standard references, don't build a question on that fact (or note the
+  correction in `reviewNote` and flag `rationale_disputed`).
+- Mix formats as the PhLE does: single best answer, EXCEPT/NOT (`except`), a few
+  roman-numeral combos, and matching sets (groupKey `notes:<table>-g<nn>`).
+  Distractors come from other rows of the same table. Spread the answer letter
+  across A–D.
+- Check with `npx tsx scripts/validate-questions.ts --dupes <files…> data/questions/*.json`
+  style runs that you are not duplicating an existing question; if one already
+  asks the same fact the same way, skip it.
+
 ## Topic slugs by module
 
 - **m1**: m1-general-chem, m1-organic-chem, m1-medicinal-chem, m1-inorganic-chem, m1-radiopharma-gases, m1-qualitative-analysis

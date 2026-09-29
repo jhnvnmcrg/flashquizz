@@ -216,6 +216,7 @@ export const taxonomy: TaxonomyImport = {
     { slug: 'm4drill', name: 'M4 Drill 1', shortName: 'M4 Drill' },
     { slug: 'm5notes', name: 'Module 5 annotated questionnaire', shortName: 'M5 Notes' },
     { slug: 'calc', name: 'Pharmaceutical Calculations Handout', shortName: 'Calc' },
+    { slug: 'notes', name: 'Reviewer reference notes', shortName: 'Notes' },
     { slug: 'manual', name: 'Added manually', shortName: 'Manual' },
   ],
 }
