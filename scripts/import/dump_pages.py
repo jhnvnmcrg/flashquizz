@@ -24,6 +24,9 @@ SOURCES = {
     "m1fpb": {"file": "M1-FPB.pdf", "zoom": None},
     "m3fpb": {"file": "Module 3 FPB.pdf", "zoom": None},
     "m4fpr": {"file": "MODULE 4FPR.pdf", "zoom": None},
+    "m4drill": {"file": "MODULE 4- Drill 1.pdf", "zoom": None},
+    "m5notes": {"file": "Module 5.pdf", "zoom": 4.0},
+    "calc": {"file": "4-Annotated Pharmaceutical Calculations Handout.pdf", "zoom": 1.5},
 }
 
 
