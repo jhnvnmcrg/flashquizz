@@ -1,318 +1,81 @@
-Welcome to your new TanStack Start app!
+# FlashQuizz
 
-# Getting Started
+A private PhLE (Philippine Pharmacist Licensure Exam) reviewer: flashcards,
+practice quizzes, spaced-repetition review and timed mock exams over questions
+imported from review-center material, organised Module → Subject → Topic.
 
-To run this application:
+Built with TanStack Start, React 19, Drizzle + Neon Postgres, Clerk, Tailwind v4
+and shadcn/ui.
+
+## Run it
 
 ```bash
 npm install
-npm run dev
+cp .env.example .env       # fill in Neon + Clerk keys
+npm run db:migrate         # create tables
+npm run db:seed            # load scripts/taxonomy.ts + data/questions/*.json
+npm run dev                # http://localhost:3000
 ```
 
-# Building For Production
+The app is **owner-only**. Sign in, open `/forbidden`, copy the user ID shown
+there into `OWNER_CLERK_USER_IDS`, and restart. Everyone else is refused by the
+`ownerOnly` middleware that wraps every server function (`src/start.ts`).
 
-To build this application for production:
+## Study modes
+
+| Mode | Where | What happens |
+|---|---|---|
+| Practice | `/study/new` | Pick A–E, see the answer and rationale straight away |
+| Flashcards | `/study/new?mode=flashcards` | Flip, then rate yourself; "Again" brings the card back |
+| Review | `/review` | Leitner boxes: a miss or bookmark returns tomorrow, then 3 days, 1 week, 3 weeks |
+| Mock exam | `/exam` | Timed, no feedback until you submit; results by topic; survives a refresh |
+
+Keyboard: `1`–`5` answer, `Space`/`Enter` flip or next, `B` bookmark,
+`←`/`→` and `M` (flag) in exams.
+
+## Question bank
+
+`/admin/questions` lists every question with fuzzy search and filters. The
+editor has a live preview, image upload and flags. `/admin/review` is the queue
+of imported items the extraction couldn't settle (missing/conflicting answers,
+suspect corrections); they stay out of study until marked **Verified**.
+Questions edited in the app are never overwritten by a later `db:seed` (unless
+you pass `--force`).
+
+## Importing reviewer material
+
+The source PDFs live in `reviewer/` and the extracted data in `data/` — both are
+gitignored because the material is review-center property.
 
 ```bash
-npm run build
+py -3.12 scripts/import/extract_text.py     # text PDFs  → data/raw/*.jsonl + data/images/
+py -3.12 scripts/import/dump_pages.py       # scanned PDFs → data/pages/<source>/p###.jpg
+py -3.12 scripts/import/show_raw.py pb1 --module m4 --from 1 --to 25
+npm run questions:validate                  # zod-validate data/questions/*.json
+npm run questions:dedupe -- --write         # mark cross-source repeats
+npm run db:seed
 ```
 
-## Styling
-
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Remove `@tailwindcss/vite` and `tailwindcss` from `package.json`
-
-## Linting & Formatting
-
-This project uses [Biome](https://biomejs.dev/) for linting and formatting. The following scripts are available:
-
-
-```bash
-npm run lint
-npm run format
-npm run check
-```
-
-
-## Deploy to Vercel
-
-1. Push this repo to GitHub, GitLab, or Bitbucket
-2. In Vercel, choose **Add New > Project** and import the repo
-3. Keep the detected TanStack Start framework settings
-4. Add production values from `.env.example` under **Settings > Environment Variables**
-5. Deploy
-
-Vercel runs the build script and deploys Nitro's output as Vercel Functions and
-static assets. The included `vercel.json` makes framework detection explicit.
-
-Variables prefixed with `VITE_` are included in the browser bundle. Keep secrets
-unprefixed so they remain server-only.
-
-
-## Setting up Clerk
-
-1. Create an application in the [Clerk dashboard](https://dashboard.clerk.com).
-2. Copy its publishable and secret keys into `.env.local`:
-
-   ```bash
-   VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
-   CLERK_SECRET_KEY=sk_test_...
-   ```
-
-3. Start the app and visit `/demo/clerk`.
-
-### What's wired up
-
-- `clerkMiddleware()` authenticates each server request from `src/start.ts`.
-- `<ClerkProvider>` supplies auth state throughout the app.
-- `<SignInButton>` and `<UserButton>` in the header respond to the session.
-- `/demo/clerk` shows Clerk's prebuilt sign-in UI and signed-in user data.
-
-### Protecting a route
-
-Use `auth()` in a loader or server function when authorization must happen on the
-server:
-
-```tsx
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { auth } from '@clerk/tanstack-react-start/server'
-
-const getAuth = createServerFn({ method: 'GET' }).handler(async () => {
-  const { userId } = await auth()
-  return { userId }
-})
-
-export const Route = createFileRoute('/dashboard')({
-  beforeLoad: async () => {
-    const { userId } = await getAuth()
-    if (!userId) throw redirect({ to: '/' })
-  },
-})
-```
-
-`<Show when="signed-in">` remains useful for presentation, but server-side checks
-are the security boundary. See Clerk's [TanStack Start docs](https://clerk.com/docs/tanstack-react-start/getting-started/quickstart).
-
-### Production checklist
-
-- Set both keys in the production environment; never expose `CLERK_SECRET_KEY`.
-- Use production keys from a dedicated production Clerk instance.
-- Configure the production domain and any social connections in the Clerk dashboard.
-
-
-# TanStack Chat Application
-
-Am example chat application built with TanStack Start, TanStack Store, and Claude AI.
-
-## .env Updates
-
-```env
-ANTHROPIC_API_KEY=your_anthropic_api_key
-```
-
-## ✨ Features
-
-### AI Capabilities
-- 🤖 Powered by Claude 3.5 Sonnet 
-- 📝 Rich markdown formatting with syntax highlighting
-- 🎯 Customizable system prompts for tailored AI behavior
-- 🔄 Real-time message updates and streaming responses (coming soon)
-
-### User Experience
-- 🎨 Modern UI with Tailwind CSS and Lucide icons
-- 🔍 Conversation management and history
-- 🔐 Secure API key management
-- 📋 Markdown rendering with code highlighting
-
-### Technical Features
-- 📦 Centralized state management with TanStack Store
-- 🔌 Extensible architecture for multiple AI providers
-- 🛠️ TypeScript for type safety
-
-## Architecture
-
-### Tech Stack
-- **Frontend Framework**: TanStack Start
-- **Routing**: TanStack Router
-- **State Management**: TanStack Store
-- **Styling**: Tailwind CSS
-- **AI Integration**: Anthropic's Claude API
-
-## Shadcn
-
-Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
-
-```bash
-pnpm dlx shadcn@latest add button
-```
-
-
-## Setting up Neon
-
-When running the `dev` command, `vite-plugin-neon-new` will identify there is not a database setup. It will then create and seed a claimable database.
-
-It is the same process as [Neon Launchpad](https://neon.new).
-
-> [!IMPORTANT]  
-> Claimable databases expire in 72 hours.
-
-
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+Raw blocks and page images are turned into `data/questions/*.json` following
+`scripts/import/STRUCTURING.md` (the contract is `questionImportFileSchema` in
+`src/lib/schemas/question.ts`). Needs PyMuPDF (`py -3.12 -m pip install pymupdf`).
+
+## Scripts
+
+| Script | |
+|---|---|
+| `npm run typecheck` | Route generation + `tsc` |
+| `npm test` | Leitner scheduling, session builder, exam apportioning |
+| `npm run db:generate` / `db:migrate` | Drizzle migrations (`drizzle/`) |
+| `npm run db:seed` | Upsert taxonomy + questions + images (`--dir`, `--dry-run`, `--force`) |
+
+## Deploying to Vercel
+
+1. Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `VITE_CLERK_PUBLISHABLE_KEY`,
+   `CLERK_SECRET_KEY` and `OWNER_CLERK_USER_IDS` for Production (and Preview).
+2. Settings → Functions → Region: **Singapore (sin1)**, next to the Neon database.
+3. In the Clerk dashboard: sign-up mode **Restricted**, add only your email to the
+   allowlist, turn on MFA. A Clerk production instance needs a custom domain;
+   without one, deploy with the development keys. Your user ID differs per Clerk
+   instance, so set `OWNER_CLERK_USER_IDS` for each environment.
+4. Run `npm run db:migrate` and `npm run db:seed` against the production database.
