@@ -27,6 +27,19 @@ SOURCES = {
     "m4drill": {"file": "MODULE 4- Drill 1.pdf", "zoom": None},
     "m5notes": {"file": "Module 5.pdf", "zoom": 4.0},
     "calc": {"file": "4-Annotated Pharmaceutical Calculations Handout.pdf", "zoom": 1.5},
+    # reviewer/gdrive
+    "m2fpb": {"file": "gdrive/M2-FPB.pdf", "zoom": None},
+    "m6fpb": {"file": "gdrive/final preboards-M6 rationale.pdf", "zoom": None},
+    "m4modular": {"file": "gdrive/6-M4 Modular Exam Rationale Presentation.pdf", "zoom": 1.5},
+    "rheum": {"file": "gdrive/13. INTRODUCTION TO RHEUMATOLOGIC DRUGS.pdf", "zoom": None},
+    "m1handout": {"file": "gdrive/MODULE 1 - PHARMACEUTICAL CHEMISTRY.pdf", "zoom": 1.5},
+    # Final Pre-board question papers (used for M5 and to fill slides missing from the decks)
+    "fpbq-m1": {"file": "gdrive/Final Pre-boards M1.pdf", "zoom": 2.5},
+    "fpbq-m2": {"file": "gdrive/Final preboards- M2.pdf", "zoom": 2.5},
+    "fpbq-m3": {"file": "gdrive/Final preboards-M3.pdf", "zoom": 2.5},
+    "fpbq-m4": {"file": "gdrive/Final preboards -M4.pdf", "zoom": 2.5},
+    "fpbq-m5": {"file": "gdrive/Final preboards-M5.pdf", "zoom": 2.5},
+    "fpbq-m6": {"file": "gdrive/Final preboards-M6.pdf", "zoom": 2.5},
 }
 
 

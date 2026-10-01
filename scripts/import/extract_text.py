@@ -33,6 +33,7 @@ SOURCES = {
     "m2fc": {"file": "M2 Final Coaching - Rationale.pdf", "module": "m2", "answer": "label"},
     "m6fc": {"file": "M6 Final Coaching - Rationale.pdf", "module": "m6", "answer": "label"},
     "m4pt": {"file": "MODULE-4-POST-TEST-RATIONALE.pdf", "module": "m4", "answer": "letter"},
+    "m4compre": {"file": "gdrive/M4- MANOR Compre Rationale.pdf", "module": "m4", "answer": "label"},
 }
 
 FLAGS = pymupdf.TEXTFLAGS_DICT | pymupdf.TEXT_COLLECT_STYLES

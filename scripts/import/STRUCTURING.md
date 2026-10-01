@@ -232,6 +232,36 @@ each table.
   style runs that you are not duplicating an existing question; if one already
   asks the same fact the same way, skip it.
 
+## reviewer/gdrive sources
+
+| source | material | answers |
+|---|---|---|
+| `m4compre` "M4 Comprehensive Exam" (m4) | text blocks: `py -3.12 scripts/import/show_raw.py m4compre --from 1 --to 25` | printed `Answer:` + rationale → keyed, `auto` |
+| `m2fpb` "M2 Final Pre-board" (m2) | slide photos `data/pages/m2fpb/p###.jpg` (129, **reverse order**: p002 = Q100) + the printed paper `data/pages/fpbq-m2/p00N.jpg` | the lecturer's **circled** choice (green ink) on the slide; handwriting = rationale → keyed, `auto` |
+| `m6fpb` "M6 Final Pre-board" (m6) | slides `data/pages/m6fpb/p###.jpg` (139, **reverse order**) + paper `data/pages/fpbq-m6/` | the **bold** choice on the slide; typed notes/tables on or next to the slide = rationale → keyed, `auto` |
+| `m4modular` "M4 Modular Exam" (m4) | slides with text in `data/raw/m4modular.txt` (`=== page N ===`), images `data/pages/m4modular/p###.jpg` | **no answer is marked**; the slide's rationale table/notes imply it → key it from the rationale, flag `ai_answer`, `needs_review`, reviewNote "No answer marked on the slide; key read from the slide's rationale (…how)". If the rationale doesn't settle it, work it out and say so. |
+| `m5fpb` "M5 Final Pre-board" (m5) | printed paper only `data/pages/fpbq-m5/p00N.jpg` (student pen circles) | unkeyed — same rules as `m4drill` |
+
+- Use the printed paper (`data/pages/fpbq-m*/`) to read clean question text,
+  choices and figures when a slide photo is blurred, cropped or covered by
+  annotations. Crop figures (structures, graphs) from the paper with
+  `scripts/import/crop_image.py`.
+- If a question number has no slide in the deck but is on the paper,
+  transcribe it from the paper; its answer is then unknown → `ai_answer`,
+  `needs_review`, and say so in `reviewNote`.
+- Answer-key slides inside a deck (e.g. "Items 26–45 …") override nothing but
+  are a cross-check — mention mismatches in `reviewNote`.
+- Annotations by students (pen circles/strikes on the paper) are not keys.
+
+**Lecture notes** (`lectures` "Lecture notes"): `data/pages/rheum/` (12 slides,
+rheumatology drugs) and `data/raw/m1handout.txt` + `data/pages/m1handout/`
+(Module 1 pharmaceutical chemistry handout). Write questions following the
+"Reference-note tables" rules (only facts the notes state, distractors from
+related facts, mixed formats, spread letters, flags `ai_answer` + `ai_choices`,
+`needs_review`). `sourceRef` `lectures:rheum-<nn>` / `lectures:m1chem-<nnn>`,
+`ordinal` = running number, `sourcePage` = slide/page. Attach a figure only if
+the question needs it.
+
 ## Topic slugs by module
 
 - **m1**: m1-general-chem, m1-organic-chem, m1-medicinal-chem, m1-inorganic-chem, m1-radiopharma-gases, m1-qualitative-analysis
