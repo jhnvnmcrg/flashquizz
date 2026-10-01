@@ -217,6 +217,12 @@ export const taxonomy: TaxonomyImport = {
     { slug: 'm5notes', name: 'Module 5 annotated questionnaire', shortName: 'M5 Notes' },
     { slug: 'calc', name: 'Pharmaceutical Calculations Handout', shortName: 'Calc' },
     { slug: 'notes', name: 'Reviewer reference notes', shortName: 'Notes' },
+    { slug: 'm4compre', name: 'M4 Comprehensive Exam', shortName: 'M4 Compre' },
+    { slug: 'm4modular', name: 'M4 Modular Exam', shortName: 'M4 Modular' },
+    { slug: 'm2fpb', name: 'M2 Final Pre-board', shortName: 'M2 FPB' },
+    { slug: 'm5fpb', name: 'M5 Final Pre-board', shortName: 'M5 FPB' },
+    { slug: 'm6fpb', name: 'M6 Final Pre-board', shortName: 'M6 FPB' },
+    { slug: 'lectures', name: 'Lecture notes', shortName: 'Lectures' },
     { slug: 'manual', name: 'Added manually', shortName: 'Manual' },
   ],
 }
