@@ -216,6 +216,8 @@ export const questionProgress = pgTable(
     index('question_progress_bookmarked_idx')
       .on(t.bookmarkedAt)
       .where(sql`${t.bookmarked}`),
+    // Sync cursor (devices pull progress changed since their last pull).
+    index().on(t.updatedAt, t.questionId),
   ],
 )
 
@@ -244,6 +246,7 @@ export const studySessions = pgTable(
       sql`${t.mode} <> 'exam' OR (${t.durationSec} IS NOT NULL AND ${t.expiresAt} IS NOT NULL)`,
     ),
     index().on(t.status, t.mode, t.startedAt.desc()),
+    index().on(t.updatedAt, t.id),
   ],
 )
 
@@ -285,8 +288,34 @@ export const attempts = pgTable(
     isCorrect: boolean().notNull(),
     responseMs: integer(),
     answeredAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    /** Set by the device that recorded it offline; makes re-uploads harmless. */
+    clientId: uuid().unique(),
+    /** When the server stored it (database clock) — the sync cursor. `answeredAt` is the device's clock. */
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index().on(t.questionId, t.answeredAt.desc()), index().on(t.answeredAt)],
+  (t) => [
+    index().on(t.questionId, t.answeredAt.desc()),
+    index().on(t.answeredAt),
+    index().on(t.createdAt, t.id),
+  ],
+)
+
+/**
+ * Every bookmark toggle, so progress can be rebuilt from history on any
+ * device (bookmarking a card outside the deck puts it in box 1).
+ */
+export const bookmarkEvents = pgTable(
+  'bookmark_events',
+  {
+    clientId: uuid().primaryKey().defaultRandom(),
+    questionId: integer()
+      .notNull()
+      .references(() => questions.id, { onDelete: 'cascade' }),
+    bookmarked: boolean().notNull(),
+    at: timestamp({ withTimezone: true }).notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index().on(t.questionId, t.at)],
 )
 
 // ── Relations (for db.query) ────────────────────────────────────────────────
@@ -364,6 +393,10 @@ export const studySessionItemsRelations = relations(studySessionItems, ({ one })
     fields: [studySessionItems.questionId],
     references: [questions.id],
   }),
+}))
+
+export const bookmarkEventsRelations = relations(bookmarkEvents, ({ one }) => ({
+  question: one(questions, { fields: [bookmarkEvents.questionId], references: [questions.id] }),
 }))
 
 export const attemptsRelations = relations(attempts, ({ one }) => ({

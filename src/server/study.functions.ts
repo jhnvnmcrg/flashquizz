@@ -3,7 +3,7 @@ import { and, asc, desc, eq, ne, sql } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { getDb } from '#/db/client.server'
-import { attempts, questions, studySessionItems, studySessions } from '#/db/schema'
+import { attempts, bookmarkEvents, questions, studySessionItems, studySessions } from '#/db/schema'
 import type { ChoiceKey } from '#/lib/schemas/enums'
 import {
   recordAnswerSchema,
@@ -171,9 +171,15 @@ export const toggleBookmark = createServerFn({ method: 'POST' })
   .middleware([ownerOnly])
   .validator(toggleBookmarkSchema)
   .handler(async ({ data }) => {
+    const now = new Date()
     const prev = (await loadProgress([data.questionId])).get(data.questionId)
-    const next = nextBookmark(prev, data.bookmarked, new Date())
-    await upsertProgress([{ questionId: data.questionId, ...next }])
+    const next = nextBookmark(prev, data.bookmarked, now)
+    const db = getDb()
+    // The event keeps progress rebuildable from history (see src/lib/study/progress-fold.ts).
+    await db.batch([
+      upsertProgress([{ questionId: data.questionId, ...next }]),
+      db.insert(bookmarkEvents).values({ questionId: data.questionId, bookmarked: data.bookmarked, at: now }),
+    ])
     return { bookmarked: next.bookmarked }
   })
 
