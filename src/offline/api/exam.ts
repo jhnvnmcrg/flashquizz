@@ -86,7 +86,7 @@ export async function finalizeExpiredExams() {
   for (const s of sessions) if (s.mode === 'exam' && expired(s, now)) await gradeExam(s.id, true)
 }
 
-/** Draw a mock exam (proportional per module) and start its timer. Mirrors startExam. */
+/** Draw a mock exam (proportional per module) and start its timer. */
 export async function startExam({ data }: { data: z.input<typeof startExamSchema> }) {
   const input = startExamSchema.parse(data)
   const s = await ensureLocal()
@@ -131,7 +131,7 @@ export async function startExam({ data }: { data: z.input<typeof startExamSchema
   return { id: session.id }
 }
 
-/** The exam paper without answers; auto-submits if time already ran out. Mirrors getExam. */
+/** The exam paper without answers; auto-submits if time already ran out. */
 export async function getExam({ data }: { data: { id: string } }) {
   await ensureLocal()
   let session = await getExamSession(data.id)
@@ -157,7 +157,7 @@ export async function getExam({ data }: { data: { id: string } }) {
   }
 }
 
-/** Save one exam answer (or flag) on this device. Mirrors saveExamAnswer. */
+/** Save one exam answer (or flag) on this device. */
 export async function saveExamAnswer({
   data,
 }: {
@@ -179,13 +179,13 @@ export async function saveExamAnswer({
   return { ok: true }
 }
 
-/** Hand in the exam. Mirrors submitExam. */
+/** Hand in the exam. */
 export async function submitExam({ data }: { data: { id: string } }) {
   const graded = await gradeExam(data.id, false)
   return { id: graded.id, status: graded.status }
 }
 
-/** Score, per-topic breakdown and every item with its rationale. Mirrors getExamResult. */
+/** Score, per-topic breakdown and every item with its rationale. */
 export async function getExamResult({ data }: { data: { id: string } }) {
   await ensureLocal()
   const session = await getExamSession(data.id)
@@ -240,7 +240,7 @@ export async function getExamResult({ data }: { data: { id: string } }) {
   }
 }
 
-/** The last 20 mock exams on this device (finished ones from other devices included). Mirrors listExams. */
+/** The last 20 mock exams on this device (finished ones from other devices included). */
 export async function listExams() {
   await finalizeExpiredExams()
   const sessions = await (await openLocalDb()).getAll('sessions')

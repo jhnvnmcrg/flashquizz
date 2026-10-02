@@ -12,7 +12,7 @@ import { applyLocalEvent, localStore } from '../store'
 import { requestPush } from '../sync/engine'
 import { ensureLocal, getLocalSession, loadViews, saveLocalSession } from './common'
 
-/** Pick questions and save a new session on this device. Mirrors startSession. */
+/** Pick questions and save a new session on this device. */
 export async function startSession({ data }: { data: z.input<typeof startSessionSchema> }) {
   const input = startSessionSchema.parse(data)
   const s = await ensureLocal()
@@ -68,7 +68,7 @@ export async function startSession({ data }: { data: z.input<typeof startSession
   return { id: session.id }
 }
 
-/** A session with full questions (answers included). Mirrors getSession. */
+/** A session with full questions (answers included). */
 export async function getSession({ data }: { data: { id: string } }) {
   await ensureLocal()
   const session = await getLocalSession(data.id)
@@ -102,7 +102,7 @@ export async function getSession({ data }: { data: { id: string } }) {
   }
 }
 
-/** Grade and save one answer (or flashcard self-grade) on this device. Mirrors recordAnswer. */
+/** Grade and save one answer (or flashcard self-grade) on this device. */
 export async function recordAnswer({
   data,
 }: {
@@ -166,7 +166,7 @@ export async function recordAnswer({
   return { isCorrect, alreadyAnswered: false, box: progress?.box ?? 0, dueAt: progress?.dueAt ?? null }
 }
 
-/** Bookmark or un-bookmark a question on this device. Mirrors toggleBookmark. */
+/** Bookmark or un-bookmark a question on this device. */
 export async function toggleBookmark({ data }: { data: { questionId: number; bookmarked: boolean } }) {
   await ensureLocal()
   const now = new Date()
@@ -183,7 +183,7 @@ export async function toggleBookmark({ data }: { data: { questionId: number; boo
   return { bookmarked: data.bookmarked }
 }
 
-/** Leaving a session early. Mirrors completeSession. */
+/** Leaving a session early. */
 export async function completeSession({ data }: { data: { id: string } }) {
   const session = await getLocalSession(data.id)
   if (!session || session.mode === 'exam') throw new Error('Session not found')
@@ -197,7 +197,7 @@ export async function completeSession({ data }: { data: { id: string } }) {
   return { ok: true }
 }
 
-/** Results of a finished session (exams too). Mirrors getSessionSummary. */
+/** Results of a finished session (exams too). */
 export async function getSessionSummary({ data }: { data: { id: string } }) {
   await ensureLocal()
   const session = await getLocalSession(data.id)

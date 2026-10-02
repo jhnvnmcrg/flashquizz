@@ -5,7 +5,7 @@ import { emptyTally } from '#/lib/tally'
 
 import { ensureLocal } from './common'
 
-/** Modules → subjects → topics and sources, from the device copy. Mirrors getTaxonomy. */
+/** Modules → subjects → topics and sources, from the device copy. */
 export async function getTaxonomy() {
   const s = await ensureLocal()
   if (!s.taxonomy) throw new Error('The question bank isn’t on this device yet. Connect to download it.')
@@ -13,7 +13,7 @@ export async function getTaxonomy() {
   return { modules, sources, unsortedCount }
 }
 
-/** One module's subjects and topics with study tallies. Mirrors getModuleOverview. */
+/** One module's subjects and topics with study tallies. */
 export async function getModuleOverview({ data }: { data: { slug: string } }) {
   const s = await ensureLocal()
   const mod = s.taxonomy?.modules.find((m) => m.slug === data.slug)
