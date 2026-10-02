@@ -1,7 +1,45 @@
 import { createStore } from '@tanstack/store'
 
-/** `updateReady`: a new version is installed and waiting for the user to switch. */
-export const pwaStore = createStore({ updateReady: false })
+/** Chrome/Edge/Android's install prompt (not in lib.dom). */
+export type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
+
+/**
+ * - `updateReady`: a new version is installed and waiting for the user to switch
+ * - `installPrompt`: the browser offered to install the app (Chromium only)
+ */
+export const pwaStore = createStore<{ updateReady: boolean; installPrompt: InstallPromptEvent | null }>({
+  updateReady: false,
+  installPrompt: null,
+})
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault()
+    pwaStore.setState((s) => ({ ...s, installPrompt: event as InstallPromptEvent }))
+  })
+  window.addEventListener('appinstalled', () => pwaStore.setState((s) => ({ ...s, installPrompt: null })))
+}
+
+/** Show the browser's install dialog, when it offered one. */
+export async function promptInstall() {
+  const event = pwaStore.state.installPrompt
+  if (!event) return
+  await event.prompt()
+  await event.userChoice.catch(() => undefined)
+  pwaStore.setState((s) => ({ ...s, installPrompt: null }))
+}
+
+/** The running service worker's build version, or null (dev, or not installed yet). */
+export async function getAppVersion(): Promise<string | null> {
+  const worker = (await navigator.serviceWorker?.getRegistration())?.active
+  if (!worker) return null
+  return new Promise((resolve) => {
+    const channel = new MessageChannel()
+    channel.port1.onmessage = (event) => resolve(typeof event.data === 'string' ? event.data : null)
+    worker.postMessage({ type: 'VERSION' }, [channel.port2])
+    setTimeout(() => resolve(null), 2000)
+  })
+}
 
 // Switching right after launch is safe: nothing is in progress yet.
 const LAUNCH_WINDOW_MS = 5_000
