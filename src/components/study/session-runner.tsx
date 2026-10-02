@@ -1,7 +1,7 @@
 import { useIsMutating, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
-import { BookmarkIcon, RotateCcwIcon, ThumbsUpIcon } from 'lucide-react'
+import { BookmarkIcon, ChevronLeftIcon, ChevronRightIcon, RotateCcwIcon, ThumbsUpIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -25,6 +25,26 @@ type Item = SessionData['items'][number]
 const MODE_TITLE = { flashcards: 'Flashcards', practice: 'Practice', review: 'Review' } as const
 const REQUEUE_GAP = 4
 
+/**
+ * Practice and review resume after the most recently answered question, or
+ * wrap round to the skipped ones when nothing is left after it.
+ */
+function resumePoint(items: Item[]) {
+  let last = -1
+  let lastAt = 0
+  items.forEach((item, index) => {
+    const at = item.answeredAt ? new Date(item.answeredAt).getTime() : 0
+    if (at > lastAt) {
+      last = index
+      lastAt = at
+    }
+  })
+  const after = items.findIndex((item, index) => index > last && !item.answeredAt)
+  if (after >= 0) return { cursor: after, wrapped: false }
+  const first = items.findIndex((item) => !item.answeredAt)
+  return { cursor: first >= 0 ? first : items.length, wrapped: true }
+}
+
 export function SessionRunner({ sessionId }: { sessionId: string }) {
   const qc = useQueryClient()
   const navigate = useNavigate()
@@ -34,10 +54,18 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
   const bookmark = useServerFn(toggleBookmark)
   const complete = useServerFn(completeSession)
 
-  // Queue of positions to show. Starts at the first unanswered item so a
-  // refresh resumes where you left off.
-  const [queue, setQueue] = useState<number[]>(() => data.items.filter((i) => !i.answeredAt).map((i) => i.position))
-  const [cursor, setCursor] = useState(0)
+  // Flashcards work through a queue of the unanswered cards ("Again" re-queues
+  // one). Practice and review page through every question in order, so you can
+  // skip ahead and go back.
+  const linear = mode !== 'flashcards'
+  const [start] = useState(() => (linear ? resumePoint(data.items) : { cursor: 0, wrapped: false }))
+  const [queue, setQueue] = useState<number[]>(() =>
+    (linear ? data.items : data.items.filter((i) => !i.answeredAt)).map((i) => i.position),
+  )
+  const [cursor, setCursor] = useState(start.cursor)
+  // Once past the last question, Next and Skip hop between the skipped ones.
+  const [wrapped, setWrapped] = useState(start.wrapped)
+  const [done, setDone] = useState(false)
   const [flipped, setFlipped] = useState(false)
   const requeued = useRef(new Set<number>())
   const shownAt = useRef(Date.now())
@@ -53,16 +81,24 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     setFlipped(false)
   }, [cursor])
 
-  const finished = queue.length === 0 || cursor >= queue.length
+  const allAnswered = data.items.every((i) => i.answeredAt)
+  const pastEnd = cursor >= queue.length
+  // Practice stays on the end screen while skipped questions remain.
+  const finished = done || (pastEnd && (!linear || allAnswered))
   // Wait for in-flight answer saves so the summary counts the last one.
   const saving = useIsMutating({ mutationKey: ['record-answer', sessionId] }) > 0
+  const leaving = useRef(false)
   useEffect(() => {
-    if (finished && !saving) {
+    if (!finished || saving || leaving.current) return
+    leaving.current = true
+    // Answering the last question closes the session on the server; leaving early doesn't.
+    const close = allAnswered ? Promise.resolve() : complete({ data: { id: sessionId } }).catch(() => undefined)
+    close.then(() => {
       invalidateProgress(qc)
       qc.removeQueries({ queryKey: ['session', sessionId, 'summary'] })
       navigate({ to: '/study/$sessionId/summary', params: { sessionId }, replace: true })
-    }
-  }, [finished, saving, navigate, qc, sessionId])
+    })
+  }, [finished, saving, allAnswered, complete, navigate, qc, sessionId])
 
   const patchItem = (pos: number, patch: Partial<Item>) =>
     qc.setQueryData(sessionQuery(sessionId).queryKey, (old) =>
@@ -147,20 +183,41 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     setCursor((c) => c + 1)
   }
 
+  // Where Next / Skip lands: the following question, or once wrapped the next
+  // skipped one. `queue.length` is the end.
+  const forwardTarget = (() => {
+    if (cursor + 1 >= queue.length) return queue.length
+    if (!wrapped) return cursor + 1
+    const skipped = data.items.findIndex((i, index) => index > cursor && !i.answeredAt)
+    return skipped >= 0 ? skipped : queue.length
+  })()
+
+  const forward = () => {
+    if (!linear || pastEnd) return
+    if (forwardTarget >= queue.length) setWrapped(true)
+    setCursor(forwardTarget)
+  }
+
+  const back = () => {
+    if (linear && cursor > 0) setCursor(Math.min(cursor, queue.length) - 1)
+  }
+
+  const answerSkipped = () => {
+    const first = data.items.findIndex((i) => !i.answeredAt)
+    if (first >= 0) setCursor(first)
+  }
+
   const next = () => {
-    if (mode === 'flashcards') return
-    if (answered) setCursor((c) => c + 1)
+    if (!linear) return
+    if (pastEnd) answerSkipped()
+    else if (answered) forward()
   }
 
   const toggleMark = () => {
     if (q) bookmarkMutation.mutate({ data: { questionId: q.id, bookmarked: !q.bookmarked } })
   }
 
-  const exit = async () => {
-    await complete({ data: { id: sessionId } }).catch(() => undefined)
-    invalidateProgress(qc)
-    navigate({ to: '/study/$sessionId/summary', params: { sessionId } })
-  }
+  const exit = () => setDone(true)
 
   useKeyboardShortcuts({
     ...Object.fromEntries(
@@ -181,11 +238,54 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     b: toggleMark,
     ' ': () => (mode === 'flashcards' ? (!flipped ? setFlipped(true) : undefined) : next()),
     Enter: () => (mode === 'flashcards' ? (!flipped ? setFlipped(true) : undefined) : next()),
-    ArrowRight: next,
+    ArrowRight: forward,
+    ArrowLeft: back,
   })
 
-  if (!item || !q) return null
   const answeredCount = results.filter((r) => r !== null).length
+
+  if (!item || !q) {
+    // Practice past the last question with some skipped: offer to go back to them.
+    if (finished || !linear) return null
+    const skipped = data.items.length - answeredCount
+    return (
+      <div className="min-h-dvh pb-16">
+        <FocusHeader
+          onExit={exit}
+          title={MODE_TITLE[mode]}
+          progress={<SessionProgress results={results} current={-1} />}
+        />
+        <main className="mx-auto w-full max-w-3xl px-4 pt-6">
+          <section className="space-y-5 rounded-2xl border bg-card p-5 sm:p-6">
+            <div className="space-y-1">
+              <h1 className="text-xl font-bold">
+                {skipped} question{skipped === 1 ? '' : 's'} skipped
+              </h1>
+              <p className="text-muted-foreground">
+                You’ve answered {answeredCount} of {data.items.length}. Go back to the skipped{' '}
+                {skipped === 1 ? 'one' : 'ones'}, or finish now — skipped questions don’t count toward your score.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="lg" onClick={back}>
+                <ChevronLeftIcon /> Back
+              </Button>
+              <Button variant="ghost" size="lg" className="ml-auto" onClick={exit}>
+                Finish anyway
+              </Button>
+              <Button size="lg" onClick={answerSkipped} autoFocus>
+                Answer skipped
+              </Button>
+            </div>
+          </section>
+        </main>
+      </div>
+    )
+  }
+
+  const shownNumber = linear ? cursor + 1 : Math.min(answeredCount + (answered ? 0 : 1), data.items.length)
+  const atEnd = forwardTarget >= queue.length
+  const forwardLabel = !answered ? 'Next' : !atEnd ? 'Next question' : allAnswered ? 'See results' : 'Finish'
 
   return (
     <div data-module style={moduleStyle(q.module.accentHue)} className="min-h-dvh pb-16">
@@ -195,7 +295,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
           <>
             {MODE_TITLE[mode]}{' '}
             <span className="font-normal text-muted-foreground tabular-nums">
-              {Math.min(answeredCount + (answered ? 0 : 1), data.items.length)} of {data.items.length}
+              {shownNumber} of {data.items.length}
             </span>
           </>
         }
@@ -210,7 +310,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
             <BookmarkIcon className={cn(q.bookmarked && 'fill-primary text-primary')} />
           </Button>
         }
-        progress={<SessionProgress results={results} current={item.position} />}
+        progress={<SessionProgress results={results} current={data.items.indexOf(item)} />}
       />
 
       <main className="mx-auto w-full max-w-3xl px-4 pt-6">
@@ -238,34 +338,50 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
               />
             </div>
             {answered ? (
-              <>
-                <RationalePanel
-                  question={q}
-                  answerKey={q.answerKey}
-                  rationale={q.rationale}
-                  mnemonic={q.mnemonic}
-                  verdict={item.isCorrect ? 'correct' : 'incorrect'}
-                  className="animate-in fade-in slide-in-from-bottom-2 duration-300"
-                />
-                <div className="flex items-center justify-between gap-3">
-                  <p className="hidden gap-4 text-sm text-muted-foreground [@media(hover:hover)]:flex">
+              <RationalePanel
+                question={q}
+                answerKey={q.answerKey}
+                rationale={q.rationale}
+                mnemonic={q.mnemonic}
+                verdict={item.isCorrect ? 'correct' : 'incorrect'}
+                className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+              />
+            ) : null}
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="lg" onClick={back} disabled={cursor === 0}>
+                <ChevronLeftIcon /> Back
+              </Button>
+              <p className="hidden flex-1 justify-center gap-4 text-sm text-muted-foreground sm:[@media(hover:hover)]:flex">
+                {answered ? (
+                  <>
                     <span>
                       <Kbd>Enter</Kbd> next
                     </span>
                     <span>
                       <Kbd>B</Kbd> bookmark
                     </span>
-                  </p>
-                  <Button size="lg" className="ml-auto" onClick={next} autoFocus>
-                    {cursor + 1 >= queue.length ? 'See results' : 'Next question'}
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <p className="hidden text-sm text-muted-foreground [@media(hover:hover)]:block">
-                Press <Kbd>1</Kbd>–<Kbd>{q.choices.length}</Kbd> to answer
+                  </>
+                ) : (
+                  <span>
+                    <Kbd>1</Kbd>–<Kbd>{q.choices.length}</Kbd> answer
+                  </span>
+                )}
+                <span>
+                  <Kbd>←</Kbd> <Kbd>→</Kbd> move
+                </span>
               </p>
-            )}
+              {/* Keyed on `answered` so Next takes focus as soon as you answer. */}
+              <Button
+                key={answered ? 'next' : 'skip'}
+                size="lg"
+                variant={answered ? 'default' : 'outline'}
+                className="ml-auto"
+                onClick={forward}
+                autoFocus={answered}
+              >
+                {forwardLabel} <ChevronRightIcon />
+              </Button>
+            </div>
           </div>
         )}
       </main>
