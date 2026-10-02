@@ -17,6 +17,3 @@ export function eligibleQuestion() {
     ),
   )
 }
-
-/** Timezone used for "today" and study streaks. */
-export const STUDY_TIMEZONE = 'Asia/Manila'

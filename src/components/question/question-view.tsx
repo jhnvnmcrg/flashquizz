@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import type { QuestionView as QuestionData } from '#/server/question-payload.server'
+import type { QuestionView as QuestionData } from '#/lib/question-view'
 import { cn } from '#/lib/utils'
 
 import { Markdown } from './markdown'

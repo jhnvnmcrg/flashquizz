@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { cn } from '#/lib/utils'
-import type { ImageMeta } from '#/server/question-payload.server'
+import type { ImageMeta } from '#/lib/question-view'
 
 /**
  * Owner-gated image URL. In `vite dev`, Nitro treats <img> requests
