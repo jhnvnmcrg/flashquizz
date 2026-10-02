@@ -9,6 +9,11 @@ export type ProgressEvent =
   | { kind: 'answer'; id: string; at: Date; correct: boolean }
   | { kind: 'bookmark'; id: string; at: Date; bookmarked: boolean }
 
+/** An attempt's event id: the device's id when it has one, otherwise the server row id. */
+export function attemptEventId(a: { id: number | string; clientId: string | null }) {
+  return a.clientId ?? `a:${String(a.id).padStart(12, '0')}`
+}
+
 /** One total order everywhere: time, then id (ties are rare but must not differ). */
 export function compareEvents(a: ProgressEvent, b: ProgressEvent) {
   return a.at.getTime() - b.at.getTime() || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
