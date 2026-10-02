@@ -65,10 +65,13 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
   const [cursor, setCursor] = useState(start.cursor)
   // Once past the last question, Next and Skip hop between the skipped ones.
   const [wrapped, setWrapped] = useState(start.wrapped)
-  const [done, setDone] = useState(false)
+  // 'exit' is the X button; 'finish' is finishing from the skipped screen.
+  const [done, setDone] = useState<'exit' | 'finish' | null>(null)
   const [flipped, setFlipped] = useState(false)
   const requeued = useRef(new Set<number>())
   const shownAt = useRef(Date.now())
+  // Only a set answered in this visit earns the celebration on the summary.
+  const answeredHere = useRef(false)
 
   const byPosition = useMemo(() => new Map(data.items.map((i) => [i.position, i])), [data.items])
   const position = queue[cursor]
@@ -84,21 +87,22 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
   const allAnswered = data.items.every((i) => i.answeredAt)
   const pastEnd = cursor >= queue.length
   // Practice stays on the end screen while skipped questions remain.
-  const finished = done || (pastEnd && (!linear || allAnswered))
+  const finished = done !== null || (pastEnd && (!linear || allAnswered))
   // Wait for in-flight answer saves so the summary counts the last one.
   const saving = useIsMutating({ mutationKey: ['record-answer', sessionId] }) > 0
   const leaving = useRef(false)
   useEffect(() => {
     if (!finished || saving || leaving.current) return
     leaving.current = true
+    const celebrate = answeredHere.current && done !== 'exit'
     // Answering the last question closes the session on the server; leaving early doesn't.
     const close = allAnswered ? Promise.resolve() : complete({ data: { id: sessionId } }).catch(() => undefined)
     close.then(() => {
       invalidateProgress(qc)
       qc.removeQueries({ queryKey: ['session', sessionId, 'summary'] })
-      navigate({ to: '/study/$sessionId/summary', params: { sessionId }, replace: true })
+      navigate({ to: '/study/$sessionId/summary', params: { sessionId }, replace: true, state: { celebrate } })
     })
-  }, [finished, saving, allAnswered, complete, navigate, qc, sessionId])
+  }, [finished, done, saving, allAnswered, complete, navigate, qc, sessionId])
 
   const patchItem = (pos: number, patch: Partial<Item>) =>
     qc.setQueryData(sessionQuery(sessionId).queryKey, (old) =>
@@ -147,6 +151,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
   const choose = (key: ChoiceKey) => {
     if (!item || !q || answered || mode === 'flashcards') return
     const isCorrect = key === q.answerKey
+    answeredHere.current = true
     patchItem(item.position, { selectedKey: key, isCorrect, answeredAt: new Date() })
     answerMutation.mutate({
       data: {
@@ -161,6 +166,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
   const grade = (grade: 'again' | 'got_it') => {
     if (!item || !flipped) return
     if (!answered) {
+      answeredHere.current = true
       patchItem(item.position, { isCorrect: grade === 'got_it', answeredAt: new Date() })
       answerMutation.mutate({
         data: {
@@ -217,7 +223,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     if (q) bookmarkMutation.mutate({ data: { questionId: q.id, bookmarked: !q.bookmarked } })
   }
 
-  const exit = () => setDone(true)
+  const exit = () => setDone('exit')
 
   useKeyboardShortcuts({
     ...Object.fromEntries(
@@ -270,7 +276,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
               <Button variant="outline" size="lg" onClick={back}>
                 <ChevronLeftIcon /> Back
               </Button>
-              <Button variant="ghost" size="lg" className="ml-auto" onClick={exit}>
+              <Button variant="ghost" size="lg" className="ml-auto" onClick={() => setDone('finish')}>
                 Finish anyway
               </Button>
               <Button size="lg" onClick={answerSkipped} autoFocus>

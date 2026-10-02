@@ -94,7 +94,7 @@ export function ExamRunner({ sessionId }: { sessionId: string }) {
     onSuccess: () => {
       invalidateProgress(qc)
       qc.invalidateQueries({ queryKey: ['exams'] })
-      navigate({ to: '/exam/$sessionId/results', params: { sessionId }, replace: true })
+      navigate({ to: '/exam/$sessionId/results', params: { sessionId }, replace: true, state: { celebrate: true } })
     },
     onError: (e) => {
       submitted.current = false

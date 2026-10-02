@@ -235,6 +235,7 @@ export const getSessionSummary = createServerFn({ method: 'GET' })
         completedAt: session.completedAt,
       },
       topics: [...byTopic.values()].sort((a, b) => a.correct / a.answered - b.correct / b.answered),
+      hues: [...new Set(items.map((i) => i.question.module.accentHue))],
       missed: items
         .filter((i) => i.isCorrect === false)
         .map((i) => ({

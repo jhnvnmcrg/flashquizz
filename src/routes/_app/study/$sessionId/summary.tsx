@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { toast } from 'sonner'
 
+import { Celebration, type CelebrationKind, useArrivalCelebration } from '#/components/celebrate/celebration'
 import { Markdown } from '#/components/question/markdown'
 import { ModuleTag } from '#/components/question/module-tag'
 import { Button } from '#/components/ui/button'
@@ -32,12 +33,24 @@ function SummaryPage() {
     onSuccess: ({ id }) => navigate({ to: '/study/$sessionId', params: { sessionId: id } }),
     onError: (e) => toast.error(e.message),
   })
+  const [celebrating, setCelebrating] = useArrivalCelebration()
 
   const { session } = data
   const pct = session.answeredCount ? Math.round((session.correctCount / session.answeredCount) * 100) : 0
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
+      {session.answeredCount > 0 ? (
+        <Celebration
+          open={celebrating}
+          onOpenChange={setCelebrating}
+          kind={session.mode as CelebrationKind}
+          correct={session.correctCount}
+          total={session.answeredCount}
+          missed={data.missed.length}
+          hues={data.hues}
+        />
+      ) : null}
       <section className="space-y-2">
         <p className="text-sm font-semibold text-muted-foreground">{MODE_NAME[session.mode]} finished</p>
         <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">

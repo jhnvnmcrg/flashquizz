@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { Segmented } from '#/components/app/segmented'
+import { Celebration, useArrivalCelebration } from '#/components/celebrate/celebration'
 import { ChoiceList } from '#/components/question/choice-list'
 import { ModuleTag, moduleStyle } from '#/components/question/module-tag'
 import { QuestionBody } from '#/components/question/question-view'
@@ -45,6 +46,7 @@ function ResultsPage() {
     onSuccess: ({ id }) => navigate({ to: '/study/$sessionId', params: { sessionId: id } }),
     onError: (e) => toast.error(e.message),
   })
+  const [celebrating, setCelebrating] = useArrivalCelebration()
   if (data.status !== 'completed') return null
 
   const { session } = data
@@ -68,6 +70,16 @@ function ResultsPage() {
 
   return (
     <div className="space-y-10">
+      <Celebration
+        open={celebrating}
+        onOpenChange={setCelebrating}
+        kind="exam"
+        correct={session.correctCount}
+        total={session.questionCount}
+        missed={wrongCount}
+        hues={[...new Set(data.topics.map((t) => t.accentHue))]}
+        autoSubmitted={session.autoSubmitted}
+      />
       <section className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="font-semibold text-muted-foreground">
