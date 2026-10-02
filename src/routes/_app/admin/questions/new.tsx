@@ -5,16 +5,16 @@ import { toast } from 'sonner'
 
 import { QuestionEditor } from '#/components/admin/question-editor'
 import type { QuestionEditorValues } from '#/lib/schemas/question'
-import { invalidateContent, taxonomyQuery } from '#/queries'
+import { invalidateContent, adminTaxonomyQuery } from '#/queries'
 import { createQuestion } from '#/server/admin.functions'
 
 export const Route = createFileRoute('/_app/admin/questions/new')({
-  loader: ({ context }) => context.queryClient.ensureQueryData(taxonomyQuery),
+  loader: ({ context }) => context.queryClient.ensureQueryData(adminTaxonomyQuery),
   component: NewQuestionPage,
 })
 
 function NewQuestionPage() {
-  const { data: tax } = useSuspenseQuery(taxonomyQuery)
+  const { data: tax } = useSuspenseQuery(adminTaxonomyQuery)
   const qc = useQueryClient()
   const navigate = useNavigate()
   const create = useServerFn(createQuestion)

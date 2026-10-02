@@ -1,6 +1,5 @@
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useServerFn } from '@tanstack/react-start'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -10,7 +9,7 @@ import { ModuleTag, moduleStyle } from '#/components/question/module-tag'
 import { Button } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { examsQuery, taxonomyQuery } from '#/queries'
-import { startExam } from '#/server/exam.functions'
+import { startExam } from '#/offline/api'
 
 export const Route = createFileRoute('/_app/exam/')({
   validateSearch: z.object({ module: z.string().optional().catch(undefined) }),
@@ -34,7 +33,7 @@ function ExamSetup() {
   const [modules, setModules] = useState<string[]>(search.module ? [search.module] : [])
   const [count, setCount] = useState(100)
   const [minutes, setMinutes] = useState(120)
-  const start = useServerFn(startExam)
+  const start = startExam
   const mutation = useMutation({
     mutationFn: start,
     onSuccess: ({ id }) => navigate({ to: '/exam/$sessionId', params: { sessionId: id } }),

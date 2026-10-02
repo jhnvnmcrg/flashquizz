@@ -11,16 +11,16 @@ import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Slider } from '#/components/ui/slider'
 import { Textarea } from '#/components/ui/textarea'
-import { invalidateContent, taxonomyQuery } from '#/queries'
+import { invalidateContent, adminTaxonomyQuery } from '#/queries'
 import { deleteTopic, saveModule, saveSubject, saveTopic } from '#/server/taxonomy.functions'
 
 export const Route = createFileRoute('/_app/admin/taxonomy')({
-  loader: ({ context }) => context.queryClient.ensureQueryData(taxonomyQuery),
+  loader: ({ context }) => context.queryClient.ensureQueryData(adminTaxonomyQuery),
   component: TaxonomyPage,
 })
 
 type Tax = ReturnType<typeof useTaxonomy>
-const useTaxonomy = () => useSuspenseQuery(taxonomyQuery).data
+const useTaxonomy = () => useSuspenseQuery(adminTaxonomyQuery).data
 
 function useSave<T>(fn: (args: { data: T }) => Promise<unknown>, message: string) {
   const qc = useQueryClient()

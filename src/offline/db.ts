@@ -53,6 +53,8 @@ export type LocalSession = {
   items: LocalSessionItem[]
   /** 1 while it holds changes not yet uploaded (IndexedDB can't index booleans). */
   pending: 0 | 1
+  /** Bumped on every local change, so an upload only clears `pending` if nothing changed meanwhile. */
+  rev?: number
 }
 
 export type LocalAttempt = {

@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { ClientOnly, useNavigate } from '@tanstack/react-router'
-import { useServerFn } from '@tanstack/react-start'
 import { ChevronLeftIcon, ChevronRightIcon, FlagIcon, GridIcon, TimerIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -26,7 +25,7 @@ import { choiceShortcut, useKeyboardShortcuts } from '#/hooks/use-keyboard-short
 import type { ChoiceKey } from '#/lib/schemas/enums'
 import { cn } from '#/lib/utils'
 import { examQuery, invalidateProgress } from '#/queries'
-import { saveExamAnswer, submitExam } from '#/server/exam.functions'
+import { saveExamAnswer, submitExam } from '#/offline/api'
 
 type ExamData = Awaited<ReturnType<NonNullable<ReturnType<typeof examQuery>['queryFn']>>>
 
@@ -62,8 +61,8 @@ export function ExamRunner({ sessionId }: { sessionId: string }) {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const { data } = useSuspenseQuery(examQuery(sessionId))
-  const save = useServerFn(saveExamAnswer)
-  const submit = useServerFn(submitExam)
+  const save = saveExamAnswer
+  const submit = submitExam
   const [index, setIndex] = useState(() => {
     const first = data.items.findIndex((i) => !i.selectedKey)
     return first === -1 ? 0 : first

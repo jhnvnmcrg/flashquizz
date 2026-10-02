@@ -1,6 +1,5 @@
 import { useIsMutating, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { useServerFn } from '@tanstack/react-start'
 import { BookmarkIcon, ChevronLeftIcon, ChevronRightIcon, RotateCcwIcon, ThumbsUpIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -15,7 +14,7 @@ import { choiceShortcut, useKeyboardShortcuts } from '#/hooks/use-keyboard-short
 import type { ChoiceKey } from '#/lib/schemas/enums'
 import { cn } from '#/lib/utils'
 import { invalidateProgress, sessionQuery } from '#/queries'
-import { completeSession, recordAnswer, toggleBookmark } from '#/server/study.functions'
+import { completeSession, recordAnswer, toggleBookmark } from '#/offline/api'
 
 import { FocusHeader, SessionProgress } from './focus-header'
 
@@ -50,9 +49,6 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
   const navigate = useNavigate()
   const { data } = useSuspenseQuery(sessionQuery(sessionId))
   const mode = data.session.mode as keyof typeof MODE_TITLE
-  const record = useServerFn(recordAnswer)
-  const bookmark = useServerFn(toggleBookmark)
-  const complete = useServerFn(completeSession)
 
   // Flashcards work through a queue of the unanswered cards ("Again" re-queues
   // one). Practice and review page through every question in order, so you can
@@ -95,14 +91,14 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
     if (!finished || saving || leaving.current) return
     leaving.current = true
     const celebrate = answeredHere.current && done !== 'exit'
-    // Answering the last question closes the session on the server; leaving early doesn't.
-    const close = allAnswered ? Promise.resolve() : complete({ data: { id: sessionId } }).catch(() => undefined)
+    // Answering the last question closes the session; leaving early has to.
+    const close = allAnswered ? Promise.resolve() : completeSession({ data: { id: sessionId } }).catch(() => undefined)
     close.then(() => {
       invalidateProgress(qc)
       qc.removeQueries({ queryKey: ['session', sessionId, 'summary'] })
       navigate({ to: '/study/$sessionId/summary', params: { sessionId }, replace: true, state: { celebrate } })
     })
-  }, [finished, done, saving, allAnswered, complete, navigate, qc, sessionId])
+  }, [finished, done, saving, allAnswered, navigate, qc, sessionId])
 
   const patchItem = (pos: number, patch: Partial<Item>) =>
     qc.setQueryData(sessionQuery(sessionId).queryKey, (old) =>
@@ -111,7 +107,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
 
   const answerMutation = useMutation({
     mutationKey: ['record-answer', sessionId],
-    mutationFn: record,
+    mutationFn: recordAnswer,
     onError: (error, variables) => {
       patchItem(variables.data.position, { selectedKey: null, isCorrect: null, answeredAt: null })
       toast.error('Your answer wasn’t saved', {
@@ -122,7 +118,7 @@ export function SessionRunner({ sessionId }: { sessionId: string }) {
   })
 
   const bookmarkMutation = useMutation({
-    mutationFn: bookmark,
+    mutationFn: toggleBookmark,
     onMutate: ({ data: v }) => {
       qc.setQueryData(sessionQuery(sessionId).queryKey, (old) =>
         old

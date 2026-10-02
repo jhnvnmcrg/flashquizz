@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useServerFn } from '@tanstack/react-start'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -11,7 +10,7 @@ import { Button } from '#/components/ui/button'
 import { Skeleton } from '#/components/ui/skeleton'
 import type { ChoiceKey } from '#/lib/schemas/enums'
 import { invalidateProgress, warmupQuery } from '#/queries'
-import { answerLoose } from '#/server/study.functions'
+import { answerLoose } from '#/offline/api'
 
 /** One live question on the dashboard — the fastest way to start. */
 export function WarmupCard() {
@@ -19,7 +18,7 @@ export function WarmupCard() {
   const [skip, setSkip] = useState<number[]>([])
   const [picked, setPicked] = useState<ChoiceKey | null>(null)
   const { data: q, isPending } = useQuery(warmupQuery(skip))
-  const answer = useServerFn(answerLoose)
+  const answer = answerLoose
   const mutation = useMutation({
     mutationFn: answer,
     onSuccess: () => invalidateProgress(qc),

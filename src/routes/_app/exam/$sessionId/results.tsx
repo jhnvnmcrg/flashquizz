@@ -1,7 +1,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { useServerFn } from '@tanstack/react-start'
 import { FlagIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -15,7 +14,7 @@ import { RationalePanel } from '#/components/question/rationale-panel'
 import { Button } from '#/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '#/components/ui/tooltip'
 import { examResultQuery } from '#/queries'
-import { startSession } from '#/server/study.functions'
+import { startSession } from '#/offline/api'
 
 const SHOW = ['all', 'wrong', 'unanswered', 'flagged'] as const
 
@@ -40,7 +39,7 @@ function ResultsPage() {
   const { show } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const { data } = useSuspenseQuery(examResultQuery(sessionId))
-  const start = useServerFn(startSession)
+  const start = startSession
   const retry = useMutation({
     mutationFn: start,
     onSuccess: ({ id }) => navigate({ to: '/study/$sessionId', params: { sessionId: id } }),

@@ -1,7 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 
 import { loadLocalState } from '#/offline/store'
-import { onRemoteChange, requestSync } from '#/offline/sync/engine'
+import { connectQueryClient, onRemoteChange, requestSync } from '#/offline/sync/engine'
 import { setSync } from '#/offline/sync/status'
 
 /**
@@ -10,6 +11,11 @@ import { setSync } from '#/offline/sync/status'
  * no background sync (iOS has none), so this is the whole schedule.
  */
 export function SyncBridge() {
+  const queryClient = useQueryClient()
+  useEffect(() => {
+    connectQueryClient(queryClient)
+  }, [queryClient])
+
   useEffect(() => {
     loadLocalState()
       .catch(() => undefined)

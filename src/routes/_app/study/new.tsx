@@ -1,6 +1,5 @@
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, stripSearchParams, useNavigate } from '@tanstack/react-router'
-import { useServerFn } from '@tanstack/react-start'
 import { Layers3Icon, ListChecksIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -12,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#
 import { STUDY_ORDER, STUDY_SCOPE, type StudyOrder, type StudyScope } from '#/lib/schemas/enums'
 import { cn } from '#/lib/utils'
 import { taxonomyQuery } from '#/queries'
-import { startSession } from '#/server/study.functions'
+import { startSession } from '#/offline/api'
 
 const defaults = { mode: 'practice', scope: 'all', count: 20, order: 'smart' } as const
 
@@ -54,7 +53,7 @@ function StudySetup() {
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const { data: tax } = useSuspenseQuery(taxonomyQuery)
-  const start = useServerFn(startSession)
+  const start = startSession
 
   const set = (patch: Partial<typeof search>) => navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true })
   const mod = tax.modules.find((m) => m.slug === search.module)
