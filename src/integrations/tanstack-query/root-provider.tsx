@@ -8,7 +8,11 @@ export function getContext() {
         staleTime: 30_000,
         refetchOnWindowFocus: false,
         retry: (count, error) => !isRedirect(error) && count < 2,
+        // Don't park queries while the browser says it's offline: local
+        // reads must run, and server reads should fail fast, not hang.
+        networkMode: 'always',
       },
+      mutations: { networkMode: 'always' },
     },
   })
 

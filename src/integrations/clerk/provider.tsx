@@ -8,7 +8,7 @@ export default function AppClerkProvider({ children }: { children: React.ReactNo
       appearance={{
         variables: {
           colorPrimary: 'oklch(0.52 0.12 162)',
-          fontFamily: "'Atkinson Hyperlegible Next', ui-sans-serif, system-ui, sans-serif",
+          fontFamily: "'Atkinson Hyperlegible Next Variable', ui-sans-serif, system-ui, sans-serif",
           borderRadius: '0.75rem',
         },
       }}
