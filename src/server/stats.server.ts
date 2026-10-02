@@ -6,7 +6,11 @@ import { addTally, emptyTally, type Tally } from '#/lib/tally'
 
 import { eligibleQuestion } from './eligibility.server'
 
-/** Eligible-question tallies grouped by module and topic. */
+/**
+ * Eligible-question tallies grouped by module and topic, in SQL. The app now
+ * computes these on the device (src/lib/study/stats.ts); this stays as the
+ * reference that scripts/check-offline-parity.ts compares against.
+ */
 export async function topicTallies() {
   const db = getDb()
   const rows = await db

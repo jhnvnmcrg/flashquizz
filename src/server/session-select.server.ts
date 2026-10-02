@@ -7,7 +7,12 @@ import type { Candidate } from '#/lib/session-builder'
 
 import { eligibleQuestion } from './eligibility.server'
 
-/** Eligible questions matching the filters/scope, shaped for the session builder. */
+/**
+ * Eligible questions matching the filters/scope, shaped for the session
+ * builder, in SQL. The app now selects on the device
+ * (src/lib/study/candidates.ts); this stays as the reference that
+ * scripts/check-offline-parity.ts compares against.
+ */
 export async function selectCandidates(filters: StudyFilters): Promise<Candidate[]> {
   const db = getDb()
   const where: (SQL | undefined)[] = [eligibleQuestion()]

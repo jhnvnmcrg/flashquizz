@@ -14,7 +14,7 @@ import { finalizeExpiredExams } from './exam'
 
 const ALL = { moduleSlugs: [], topicIds: [], sourceSlugs: [], scope: 'all' as const }
 
-/** Today: totals, streak, modules, sessions to resume, recent exams. Mirrors getDashboard. */
+/** Today: totals, streak, modules, sessions to resume, recent exams. */
 export async function getDashboard() {
   await finalizeExpiredExams()
   const s = await ensureLocal()
@@ -62,7 +62,7 @@ export async function getDashboard() {
   }
 }
 
-/** Review deck: due cards, the next two weeks, boxes, bookmarks. Mirrors getReviewHub. */
+/** Review deck: due cards, the next two weeks, boxes, bookmarks. */
 export async function getReviewHub() {
   const s = await ensureLocal()
   const now = new Date()
@@ -103,7 +103,7 @@ export async function getReviewHub() {
   }
 }
 
-/** One question to answer straight from the dashboard. Mirrors getWarmup. */
+/** One question to answer straight from the dashboard. */
 export async function getWarmup({ data }: { data: { skip: number[] } }) {
   const s = await ensureLocal()
   const skip = new Set(data.skip)
@@ -115,7 +115,7 @@ export async function getWarmup({ data }: { data: { skip: number[] } }) {
   return (await loadViews([id])).get(id) ?? null
 }
 
-/** Answer a question outside any session (dashboard warm-up). Mirrors answerLoose. */
+/** Answer a question outside any session (dashboard warm-up). */
 export async function answerLoose({ data }: { data: { questionId: number; selectedKey: ChoiceKey } }) {
   const s = await ensureLocal()
   if (!s.index.get(data.questionId)?.eligible) throw new Error('Question not available')

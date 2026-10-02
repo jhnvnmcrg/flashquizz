@@ -1,10 +1,8 @@
-import { notFound } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { asc, eq, inArray, sql } from 'drizzle-orm'
-import { z } from 'zod'
+import { eq, inArray, sql } from 'drizzle-orm'
 
 import { getDb } from '#/db/client.server'
-import { modules, questions, sources, subjects, topics } from '#/db/schema'
+import { modules, questions, subjects, topics } from '#/db/schema'
 import {
   deleteTopicSchema,
   reorderSchema,
@@ -12,10 +10,8 @@ import {
   saveSubjectSchema,
   saveTopicSchema,
 } from '#/lib/schemas/taxonomy'
-import { emptyTally } from '#/lib/tally'
 
 import { ownerOnly } from './owner'
-import { topicTallies } from './stats.server'
 import { loadTaxonomy } from './taxonomy.server'
 
 const slugify = (s: string) =>
@@ -29,51 +25,6 @@ const slugify = (s: string) =>
 export const getTaxonomy = createServerFn({ method: 'GET' })
   .middleware([ownerOnly])
   .handler(() => loadTaxonomy())
-
-export const getModuleOverview = createServerFn({ method: 'GET' })
-  .middleware([ownerOnly])
-  .validator(z.object({ slug: z.string() }))
-  .handler(async ({ data }) => {
-    const db = getDb()
-    const mod = await db.query.modules.findFirst({
-      where: eq(modules.slug, data.slug),
-      with: {
-        subjects: {
-          orderBy: asc(subjects.sortOrder),
-          with: { topics: { orderBy: asc(topics.sortOrder), columns: { id: true, name: true } } },
-        },
-      },
-    })
-    if (!mod) throw notFound()
-    const [tallies, srcs] = await Promise.all([
-      topicTallies(),
-      db
-        .select({ slug: sources.slug, shortName: sources.shortName, n: sql<number>`count(*)::int` })
-        .from(questions)
-        .innerJoin(sources, eq(sources.id, questions.sourceId))
-        .where(eq(questions.moduleId, mod.id))
-        .groupBy(sources.slug, sources.shortName, sources.sortOrder)
-        .orderBy(asc(sources.sortOrder)),
-    ])
-    return {
-      module: {
-        id: mod.id,
-        slug: mod.slug,
-        code: mod.code,
-        name: mod.name,
-        shortName: mod.shortName,
-        description: mod.description,
-        accentHue: mod.accentHue,
-      },
-      tally: tallies.byModule.get(mod.id) ?? emptyTally(),
-      subjects: mod.subjects.map((s) => ({
-        id: s.id,
-        name: s.name,
-        topics: s.topics.map((t) => ({ id: t.id, name: t.name, tally: tallies.byTopic.get(t.id) ?? emptyTally() })),
-      })),
-      sources: srcs,
-    }
-  })
 
 export const saveModule = createServerFn({ method: 'POST' })
   .middleware([ownerOnly])
