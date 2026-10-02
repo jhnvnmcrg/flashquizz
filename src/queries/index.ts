@@ -1,11 +1,10 @@
 import { type QueryClient, queryOptions } from '@tanstack/react-query'
 
 import type { QuestionFlag, QuestionStatus } from '#/lib/schemas/enums'
+import * as local from '#/offline/api'
+import { requestSync } from '#/offline/sync/engine'
 import { getAdminQuestion, getReviewQueue, listAdminQuestions } from '#/server/admin.functions'
-import { getDashboard, getReviewHub } from '#/server/dashboard.functions'
-import { getExam, getExamResult, listExams } from '#/server/exam.functions'
-import { getSession, getSessionSummary, getWarmup } from '#/server/study.functions'
-import { getModuleOverview, getTaxonomy } from '#/server/taxonomy.functions'
+import { getTaxonomy } from '#/server/taxonomy.functions'
 import { getViewer } from '#/server/viewer.functions'
 
 export const viewerQuery = queryOptions({
@@ -15,66 +14,84 @@ export const viewerQuery = queryOptions({
   retry: false,
 })
 
+// ── Study screens: read from the device copy (src/offline), work offline ──
+// They change only when this device writes or a sync lands; both invalidate.
+const fromDevice = { staleTime: Number.POSITIVE_INFINITY, retry: false } as const
+
 export const dashboardQuery = queryOptions({
   queryKey: ['dashboard'],
-  queryFn: () => getDashboard(),
+  queryFn: () => local.getDashboard(),
+  ...fromDevice,
 })
 
 export const warmupQuery = (skip: number[]) =>
   queryOptions({
     queryKey: ['warmup', skip],
-    queryFn: () => getWarmup({ data: { skip } }),
-    staleTime: Number.POSITIVE_INFINITY,
+    queryFn: () => local.getWarmup({ data: { skip } }),
+    ...fromDevice,
   })
 
 export const taxonomyQuery = queryOptions({
   queryKey: ['taxonomy'],
-  queryFn: () => getTaxonomy(),
-  staleTime: 5 * 60_000,
+  queryFn: () => local.getTaxonomy(),
+  ...fromDevice,
 })
 
 export const moduleQuery = (slug: string) =>
   queryOptions({
     queryKey: ['module', slug],
-    queryFn: () => getModuleOverview({ data: { slug } }),
+    queryFn: () => local.getModuleOverview({ data: { slug } }),
+    ...fromDevice,
   })
 
 export const reviewHubQuery = queryOptions({
   queryKey: ['review'],
-  queryFn: () => getReviewHub(),
+  queryFn: () => local.getReviewHub(),
+  ...fromDevice,
 })
 
 export const sessionQuery = (id: string) =>
   queryOptions({
     queryKey: ['session', id],
-    queryFn: () => getSession({ data: { id } }),
-    staleTime: Number.POSITIVE_INFINITY,
+    queryFn: () => local.getSession({ data: { id } }),
+    ...fromDevice,
   })
 
 export const sessionSummaryQuery = (id: string) =>
   queryOptions({
     queryKey: ['session', id, 'summary'],
-    queryFn: () => getSessionSummary({ data: { id } }),
+    queryFn: () => local.getSessionSummary({ data: { id } }),
+    ...fromDevice,
   })
 
 export const examsQuery = queryOptions({
   queryKey: ['exams'],
-  queryFn: () => listExams(),
+  queryFn: () => local.listExams(),
+  ...fromDevice,
 })
 
 export const examQuery = (id: string) =>
   queryOptions({
     queryKey: ['exams', id],
-    queryFn: () => getExam({ data: { id } }),
-    staleTime: Number.POSITIVE_INFINITY,
+    queryFn: () => local.getExam({ data: { id } }),
+    ...fromDevice,
   })
 
 export const examResultQuery = (id: string) =>
   queryOptions({
     queryKey: ['exams', id, 'result'],
-    queryFn: () => getExamResult({ data: { id } }),
-    staleTime: Number.POSITIVE_INFINITY,
+    queryFn: () => local.getExamResult({ data: { id } }),
+    ...fromDevice,
   })
+
+// ── Question bank (admin): online only, straight from the server ──
+
+/** The editable taxonomy, fresh from the server (study screens use the device copy). */
+export const adminTaxonomyQuery = queryOptions({
+  queryKey: ['admin', 'taxonomy'],
+  queryFn: () => getTaxonomy(),
+  staleTime: 5 * 60_000,
+})
 
 export type AdminListFilters = { module?: string; status?: QuestionStatus; source?: string }
 
@@ -105,11 +122,8 @@ export function invalidateProgress(qc: QueryClient) {
   ])
 }
 
-/** After admin edits: refresh content everywhere. */
+/** After admin edits: refresh the question bank, and bring the device copy up to date. */
 export function invalidateContent(qc: QueryClient) {
-  return Promise.all([
-    qc.invalidateQueries({ queryKey: ['admin'] }),
-    qc.invalidateQueries({ queryKey: ['taxonomy'] }),
-    invalidateProgress(qc),
-  ])
+  void requestSync({ force: true })
+  return qc.invalidateQueries({ queryKey: ['admin'] })
 }

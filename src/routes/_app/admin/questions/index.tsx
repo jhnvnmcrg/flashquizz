@@ -11,7 +11,7 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select'
 import { FLAG_LABELS, QUESTION_FLAGS, QUESTION_STATUS, STATUS_LABELS } from '#/lib/schemas/enums'
-import { adminQuestionsQuery, invalidateContent, taxonomyQuery } from '#/queries'
+import { adminQuestionsQuery, invalidateContent, adminTaxonomyQuery } from '#/queries'
 import { setQuestionsStatus } from '#/server/admin.functions'
 
 const searchSchema = z.object({
@@ -28,7 +28,7 @@ export const Route = createFileRoute('/_app/admin/questions/')({
   loader: ({ context, deps }) =>
     Promise.all([
       context.queryClient.ensureQueryData(adminQuestionsQuery(deps)),
-      context.queryClient.ensureQueryData(taxonomyQuery),
+      context.queryClient.ensureQueryData(adminTaxonomyQuery),
     ]),
   component: QuestionsPage,
 })
@@ -39,7 +39,7 @@ function QuestionsPage() {
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const qc = useQueryClient()
-  const { data: tax } = useSuspenseQuery(taxonomyQuery)
+  const { data: tax } = useSuspenseQuery(adminTaxonomyQuery)
   const { data: rows } = useQuery(
     adminQuestionsQuery({ module: search.module, status: search.status, source: search.source }),
   )

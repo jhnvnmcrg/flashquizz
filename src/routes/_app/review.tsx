@@ -1,6 +1,5 @@
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useServerFn } from '@tanstack/react-start'
 import { BookmarkIcon, RotateCcwIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -9,7 +8,7 @@ import { ModuleTag, moduleStyle } from '#/components/question/module-tag'
 import { Button } from '#/components/ui/button'
 import { BOX_INTERVAL_DAYS } from '#/lib/leitner'
 import { reviewHubQuery } from '#/queries'
-import { startSession } from '#/server/study.functions'
+import { startSession } from '#/offline/api'
 
 export const Route = createFileRoute('/_app/review')({
   loader: ({ context }) => context.queryClient.ensureQueryData(reviewHubQuery),
@@ -22,7 +21,7 @@ const BOX_LABEL = ['', 'Learning', 'Tomorrow', '3 days', '1 week', '3 weeks']
 function ReviewHub() {
   const { data } = useSuspenseQuery(reviewHubQuery)
   const navigate = useNavigate()
-  const start = useServerFn(startSession)
+  const start = startSession
   const mutation = useMutation({
     mutationFn: start,
     onSuccess: ({ id }) => navigate({ to: '/study/$sessionId', params: { sessionId: id } }),

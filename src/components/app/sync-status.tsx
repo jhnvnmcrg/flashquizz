@@ -24,7 +24,11 @@ function describe(s: Status): { icon: LucideIcon; text: string; tone: string } |
       }
       return { icon: LoaderCircleIcon, text: 'Syncing', tone: 'text-info' }
     case 'offline':
-      return { icon: CloudOffIcon, text: 'Offline', tone: 'text-muted-foreground' }
+      return {
+        icon: CloudOffIcon,
+        text: s.pending ? `Offline, ${s.pending} waiting` : 'Offline',
+        tone: 'text-muted-foreground',
+      }
     case 'signed-out':
       return { icon: LogInIcon, text: 'Sign in to sync', tone: 'text-warning-foreground' }
     case 'update-required':
@@ -32,6 +36,7 @@ function describe(s: Status): { icon: LucideIcon; text: string; tone: string } |
     case 'error':
       return { icon: TriangleAlertIcon, text: 'Sync failed', tone: 'text-destructive' }
     default:
+      if (s.pending) return { icon: LoaderCircleIcon, text: `${s.pending} waiting`, tone: 'text-info' }
       return s.lastSyncedAt ? { icon: CloudCheckIcon, text: 'Synced', tone: 'text-muted-foreground' } : null
   }
 }

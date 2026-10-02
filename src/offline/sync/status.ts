@@ -19,6 +19,8 @@ export type SyncStatus = {
   images: { done: number; total: number }
   lastSyncedAt: Date | null
   error: string | null
+  /** Changes on this device not uploaded yet. */
+  pending: number
 }
 
 export const syncStore = createStore<SyncStatus>({
@@ -29,6 +31,7 @@ export const syncStore = createStore<SyncStatus>({
   images: { done: 0, total: 0 },
   lastSyncedAt: null,
   error: null,
+  pending: 0,
 })
 
 export function setSync(patch: Partial<SyncStatus>) {

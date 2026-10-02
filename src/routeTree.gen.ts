@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as ForbiddenRouteImport } from './routes/forbidden'
+import { Route as SetupRouteImport } from './routes/setup'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppOfflineRouteImport } from './routes/_app/offline'
@@ -38,6 +39,11 @@ const AppRoute = AppRouteImport.update({
 const ForbiddenRoute = ForbiddenRouteImport.update({
   id: '/forbidden',
   path: '/forbidden',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -141,6 +147,7 @@ const AppStudySessionIdSummaryRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/forbidden': typeof ForbiddenRoute
+  '/setup': typeof SetupRoute
   '/admin': typeof AppAdminRouteRouteWithChildren
   '/offline': typeof AppOfflineRoute
   '/review': typeof AppReviewRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/forbidden': typeof ForbiddenRoute
+  '/setup': typeof SetupRoute
   '/offline': typeof AppOfflineRoute
   '/review': typeof AppReviewRoute
   '/sign-in/$': typeof SignInSplatRoute
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/forbidden': typeof ForbiddenRoute
+  '/setup': typeof SetupRoute
   '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_app/offline': typeof AppOfflineRoute
   '/_app/review': typeof AppReviewRoute
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/forbidden'
+    | '/setup'
     | '/admin'
     | '/offline'
     | '/review'
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forbidden'
+    | '/setup'
     | '/offline'
     | '/review'
     | '/sign-in/$'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/forbidden'
+    | '/setup'
     | '/_app/admin'
     | '/_app/offline'
     | '/_app/review'
@@ -277,6 +289,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   ForbiddenRoute: typeof ForbiddenRoute
+  SetupRoute: typeof SetupRoute
   SignInSplatRoute: typeof SignInSplatRoute
   ApiImagesImageIdRoute: typeof ApiImagesImageIdRoute
 }
@@ -295,6 +308,13 @@ declare module '@tanstack/react-router' {
       path: '/forbidden'
       fullPath: '/forbidden'
       preLoaderRoute: typeof ForbiddenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/': {
@@ -488,6 +508,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   ForbiddenRoute: ForbiddenRoute,
+  SetupRoute: SetupRoute,
   SignInSplatRoute: SignInSplatRoute,
   ApiImagesImageIdRoute: ApiImagesImageIdRoute,
 }

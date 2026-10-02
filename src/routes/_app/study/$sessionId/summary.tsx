@@ -1,6 +1,5 @@
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useServerFn } from '@tanstack/react-start'
 import { toast } from 'sonner'
 
 import { Celebration, type CelebrationKind, useArrivalCelebration } from '#/components/celebrate/celebration'
@@ -8,7 +7,7 @@ import { Markdown } from '#/components/question/markdown'
 import { ModuleTag } from '#/components/question/module-tag'
 import { Button } from '#/components/ui/button'
 import { sessionSummaryQuery } from '#/queries'
-import { startSession } from '#/server/study.functions'
+import { startSession } from '#/offline/api'
 
 export const Route = createFileRoute('/_app/study/$sessionId/summary')({
   loader: ({ context, params }) => context.queryClient.ensureQueryData(sessionSummaryQuery(params.sessionId)),
@@ -27,7 +26,7 @@ function SummaryPage() {
   const { sessionId } = Route.useParams()
   const { data } = useSuspenseQuery(sessionSummaryQuery(sessionId))
   const navigate = useNavigate()
-  const start = useServerFn(startSession)
+  const start = startSession
   const retry = useMutation({
     mutationFn: start,
     onSuccess: ({ id }) => navigate({ to: '/study/$sessionId', params: { sessionId: id } }),

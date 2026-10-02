@@ -13,7 +13,7 @@ import { Button } from '#/components/ui/button'
 import { Textarea } from '#/components/ui/textarea'
 import { FLAG_LABELS, type ChoiceKey, type QuestionFlag } from '#/lib/schemas/enums'
 import type { QuestionEditorValues } from '#/lib/schemas/question'
-import { adminQuestionQuery, invalidateContent, taxonomyQuery } from '#/queries'
+import { adminQuestionQuery, invalidateContent, adminTaxonomyQuery } from '#/queries'
 import { saveGroupContext, updateQuestion } from '#/server/admin.functions'
 
 export const Route = createFileRoute('/_app/admin/questions/$questionId')({
@@ -23,7 +23,7 @@ export const Route = createFileRoute('/_app/admin/questions/$questionId')({
   loader: ({ context, params }) =>
     Promise.all([
       context.queryClient.ensureQueryData(adminQuestionQuery(Number(params.questionId))),
-      context.queryClient.ensureQueryData(taxonomyQuery),
+      context.queryClient.ensureQueryData(adminTaxonomyQuery),
     ]),
   component: EditQuestionPage,
 })
@@ -33,7 +33,7 @@ function EditQuestionPage() {
   const id = Number(questionId)
   const qc = useQueryClient()
   const { data } = useSuspenseQuery(adminQuestionQuery(id))
-  const { data: tax } = useSuspenseQuery(taxonomyQuery)
+  const { data: tax } = useSuspenseQuery(adminTaxonomyQuery)
   const q = data.question
   const update = useServerFn(updateQuestion)
   const mutation = useMutation({
