@@ -4,10 +4,12 @@ import { and, asc, desc, eq, ne, sql } from 'drizzle-orm'
 import { getDb } from '#/db/client.server'
 import { attempts, modules, questionProgress, questions, studySessions, subjects, topics } from '#/db/schema'
 
-import { STUDY_TIMEZONE } from './eligibility.server'
+import { STUDY_TIMEZONE } from '#/lib/constants'
+import { emptyTally } from '#/lib/tally'
+
 import { finalizeExpiredExams } from './exam.server'
 import { ownerOnly } from './owner'
-import { emptyTally, topicTallies } from './stats.server'
+import { topicTallies } from './stats.server'
 
 /** Consecutive study days ending today (or yesterday) in Manila time. */
 async function studyStreak() {

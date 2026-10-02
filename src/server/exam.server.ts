@@ -2,11 +2,10 @@ import { and, eq, lt, sql } from 'drizzle-orm'
 
 import { getDb } from '#/db/client.server'
 import { attempts, questions, studySessionItems, studySessions } from '#/db/schema'
+import { EXAM_GRACE_SEC } from '#/lib/constants'
+import { gradeExamItems } from '#/lib/study/grading'
 
 import { loadProgress, nextProgress, upsertProgress } from './progress.server'
-
-/** Seconds of grace after expiry for in-flight answer saves. */
-export const EXAM_GRACE_SEC = 15
 
 /**
  * Grade an active exam in one batch: item results, attempts, Leitner progress
@@ -30,14 +29,15 @@ export async function gradeExam(sessionId: string, auto: boolean) {
     .where(eq(studySessionItems.sessionId, sessionId))
 
   const now = new Date()
-  const graded = items.map((i) => ({ ...i, isCorrect: i.selectedKey !== null && i.selectedKey === i.answerKey }))
+  const { graded, answeredCount, correctCount } = gradeExamItems(
+    items,
+    new Map(items.map((i) => [i.questionId, i.answerKey])),
+  )
   const prev = await loadProgress(graded.map((g) => g.questionId))
   const progress = graded.map((g) => ({
     questionId: g.questionId,
     ...nextProgress(prev.get(g.questionId), g.isCorrect, now),
   }))
-  const correctCount = graded.filter((g) => g.isCorrect).length
-  const answeredCount = graded.filter((g) => g.selectedKey !== null).length
 
   const correctPositions = graded.filter((g) => g.isCorrect).map((g) => g.position)
   await db.batch([

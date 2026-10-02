@@ -2,7 +2,7 @@ import { CheckIcon, XIcon } from 'lucide-react'
 
 import type { ChoiceKey } from '#/lib/schemas/enums'
 import type { Choice } from '#/lib/schemas/question'
-import type { ImageMeta } from '#/server/question-payload.server'
+import type { ImageMeta } from '#/lib/question-view'
 import { cn } from '#/lib/utils'
 
 import { Markdown } from './markdown'

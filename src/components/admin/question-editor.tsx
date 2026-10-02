@@ -29,7 +29,7 @@ import {
 import { type QuestionEditorValues, questionEditorSchema } from '#/lib/schemas/question'
 import { cn } from '#/lib/utils'
 import type { getTaxonomy } from '#/server/taxonomy.functions'
-import type { ImageMeta } from '#/server/question-payload.server'
+import type { ImageMeta } from '#/lib/question-view'
 
 type Taxonomy = Awaited<ReturnType<typeof getTaxonomy>>
 

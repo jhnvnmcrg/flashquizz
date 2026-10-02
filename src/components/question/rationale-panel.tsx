@@ -1,7 +1,7 @@
 import { LightbulbIcon } from 'lucide-react'
 
 import type { ChoiceKey } from '#/lib/schemas/enums'
-import type { QuestionView } from '#/server/question-payload.server'
+import type { QuestionView } from '#/lib/question-view'
 import { cn } from '#/lib/utils'
 
 import { Markdown } from './markdown'

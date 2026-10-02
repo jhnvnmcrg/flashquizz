@@ -2,33 +2,9 @@ import { eq, sql } from 'drizzle-orm'
 
 import { getDb } from '#/db/client.server'
 import { questionProgress, questions } from '#/db/schema'
+import { addTally, emptyTally, type Tally } from '#/lib/tally'
 
 import { eligibleQuestion } from './eligibility.server'
-
-export type Tally = {
-  total: number
-  seen: number
-  answered: number
-  correct: number
-  due: number
-  bookmarked: number
-  missed: number
-}
-
-export const emptyTally = (): Tally => ({
-  total: 0,
-  seen: 0,
-  answered: 0,
-  correct: 0,
-  due: 0,
-  bookmarked: 0,
-  missed: 0,
-})
-
-export function addTally(into: Tally, from: Tally) {
-  for (const k of Object.keys(into) as (keyof Tally)[]) into[k] += from[k]
-  return into
-}
 
 /** Eligible-question tallies grouped by module and topic. */
 export async function topicTallies() {

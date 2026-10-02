@@ -12,9 +12,10 @@ import {
   saveSubjectSchema,
   saveTopicSchema,
 } from '#/lib/schemas/taxonomy'
+import { emptyTally } from '#/lib/tally'
 
 import { ownerOnly } from './owner'
-import { emptyTally, topicTallies } from './stats.server'
+import { topicTallies } from './stats.server'
 
 const slugify = (s: string) =>
   s
