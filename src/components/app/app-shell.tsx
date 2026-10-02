@@ -1,4 +1,3 @@
-import { UserButton } from '@clerk/tanstack-react-start'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useMatches } from '@tanstack/react-router'
 import { BookOpenCheckIcon, HomeIcon, LibraryBigIcon, TimerIcon } from 'lucide-react'
@@ -7,7 +6,9 @@ import type { ReactNode } from 'react'
 import { cn } from '#/lib/utils'
 import { dashboardQuery } from '#/queries'
 
+import { AccountMenu } from './account-menu'
 import { Logo } from './logo'
+import { SyncStatus } from './sync-status'
 import { ThemeToggle } from './theme-toggle'
 
 const NAV = [
@@ -60,9 +61,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1">
+            <SyncStatus />
             <ThemeToggle />
-            <UserButton />
+            <AccountMenu />
           </div>
         </div>
       </header>

@@ -23,14 +23,20 @@ function sessionCookieFresh(marginMs = 10_000) {
  * session cookie when the app launches or resumes (iOS suspends clerk-js).
  * When the cookie is stale, wait for clerk-js and send a fresh token instead.
  */
-async function freshToken() {
-  if (typeof window === 'undefined' || !navigator.onLine || sessionCookieFresh()) return null
+async function freshToken({ force = false } = {}) {
+  if (typeof window === 'undefined' || !navigator.onLine || (!force && sessionCookieFresh())) return null
   try {
     return await getToken()
   } catch {
     // Clerk didn't load (offline or blocked): let the server decide.
     return null
   }
+}
+
+/** Headers for a plain fetch to an owner-only route (e.g. images). `force` skips the cookie check. */
+export async function authHeaders(opts: { force?: boolean } = {}): Promise<Record<string, string>> {
+  const token = await freshToken(opts)
+  return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
 /** Client half of every server function call. Registered globally in src/start.ts. */
