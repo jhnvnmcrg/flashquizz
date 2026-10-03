@@ -223,6 +223,9 @@ export const taxonomy: TaxonomyImport = {
     { slug: 'm5fpb', name: 'M5 Final Pre-board', shortName: 'M5 FPB' },
     { slug: 'm6fpb', name: 'M6 Final Pre-board', shortName: 'M6 FPB' },
     { slug: 'lectures', name: 'Lecture notes', shortName: 'Lectures' },
+    { slug: 'm1fc', name: 'M1 Final Coaching', shortName: 'M1 FC' },
+    { slug: 'm4fc', name: 'M4 Final Coaching', shortName: 'M4 FC' },
+    { slug: 'm5fc', name: 'M5 Final Coaching', shortName: 'M5 FC' },
     { slug: 'manual', name: 'Added manually', shortName: 'Manual' },
   ],
 }

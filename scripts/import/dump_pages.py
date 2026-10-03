@@ -33,6 +33,10 @@ SOURCES = {
     "m4modular": {"file": "gdrive/6-M4 Modular Exam Rationale Presentation.pdf", "zoom": 1.5},
     "rheum": {"file": "gdrive/13. INTRODUCTION TO RHEUMATOLOGIC DRUGS.pdf", "zoom": None},
     "m1handout": {"file": "gdrive/MODULE 1 - PHARMACEUTICAL CHEMISTRY.pdf", "zoom": 1.5},
+    # Final Coaching papers (scans, several image tiles per page: always render)
+    "m1fc": {"file": "gdrive/FC-M1.pdf", "zoom": 2.0},
+    "m4fc": {"file": "gdrive/FC-M4.pdf", "zoom": 2.0},
+    "m5fc": {"file": "gdrive/FC M5.pdf", "zoom": 2.0},
     # Final Pre-board question papers (used for M5 and to fill slides missing from the decks)
     "fpbq-m1": {"file": "gdrive/Final Pre-boards M1.pdf", "zoom": 2.5},
     "fpbq-m2": {"file": "gdrive/Final preboards- M2.pdf", "zoom": 2.5},

@@ -253,6 +253,37 @@ each table.
   are a cross-check — mention mismatches in `reviewNote`.
 - Annotations by students (pen circles/strikes on the paper) are not keys.
 
+**Final Coaching papers** (`m1fc` "M1 Final Coaching" / `m4fc` "M4 Final Coaching" /
+`m5fc` "M5 Final Coaching", shortNames "M1 FC" / "M4 FC" / "M5 FC"; modules
+m1 / m4 / m5): the October 2026 Manor "Final Coaching Questions" papers,
+photographed pages in `data/pages/<source>/p0NN.jpg` (two-column question
+table, typed a–d/e choices, a diagonal MANOR watermark to ignore).
+
+- **Key** = the choice marked with **yellow highlighter**, or a **red circle** on
+  its letter. These usually coincide; a circle confirms a highlight. Keyed →
+  `auto`.
+- **Not keys:**
+  - yellow or green highlights on words in the stem;
+  - red ✗ / slashes / strike-throughs on options (eliminated distractors);
+  - ticks next to statements.
+- **Problem markings:**
+  - highlight and circle on different choices, or two choices marked →
+    `answerKey: null` (or the clearly intended one), `multiple_answers`,
+    `needs_review`;
+  - nothing marked → work the answer out as in "Unkeyed sources": flag
+    `ai_answer`, `needs_review`, and a `reviewNote` saying so.
+- **Rationale:** the handwritten notes (red/green/blue) next to the item and the
+  pasted lecture-slide screenshots in the margins — transcribe the legible,
+  relevant parts as short bullets (`ocr_uncertain` if you guessed words). A
+  "BEQ" tag → first rationale line "Marked BEQ (board exam question) in the
+  source." Taglish stays as written. No notes → `rationale: ""` +
+  `rationale_missing`.
+- **Shared figures:** "For numbers 13–15" sets with a shared graph or table →
+  `groupKey` `<source>:g013`, the shared instruction in `context`. Crop the
+  figure once and attach it (role `stem`) to every member that needs it.
+- `sourceRef` `<source>:<nnn>` (printed number), `ordinal` = printed number,
+  `sourcePage` = page.
+
 **Lecture notes** (`lectures` "Lecture notes"): `data/pages/rheum/` (12 slides,
 rheumatology drugs) and `data/raw/m1handout.txt` + `data/pages/m1handout/`
 (Module 1 pharmaceutical chemistry handout). Write questions following the
