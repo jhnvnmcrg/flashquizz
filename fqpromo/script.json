@@ -1,0 +1,101 @@
+{
+  "voice": "en-PH-RosaNeural",
+  "rate": "+12%",
+  "lines": [
+    {
+      "id": "hook",
+      "chunks": [
+        {
+          "caption": "Board exam season?",
+          "tts": "Board exam season?"
+        },
+        {
+          "caption": "Meet FlashQuizz.",
+          "tts": "Meet Flash Quiz!"
+        }
+      ]
+    },
+    {
+      "id": "modules",
+      "chunks": [
+        {
+          "caption": "Your whole *PhLE* reviewer",
+          "tts": "Your whole P.H.L.E. reviewer."
+        },
+        {
+          "caption": "*Six modules.* One app.",
+          "tts": "Six modules, one app."
+        }
+      ]
+    },
+    {
+      "id": "practice",
+      "chunks": [
+        {
+          "caption": "Practice like the *real thing*",
+          "tts": "Practice like the real thing."
+        },
+        {
+          "caption": "*Instant* rationales",
+          "tts": "Instant rationales,"
+        },
+        {
+          "caption": "plus *mnemonics* that stick",
+          "tts": "plus mnemonics that stick."
+        }
+      ]
+    },
+    {
+      "id": "flashcards",
+      "chunks": [
+        {
+          "caption": "*Flip* flashcards",
+          "tts": "Flip flashcards."
+        },
+        {
+          "caption": "Miss one? It *comes back*",
+          "tts": "Miss one? It comes back"
+        },
+        {
+          "caption": "Tomorrow, 3 days, 1 week, 3 weeks",
+          "tts": "tomorrow, three days, a week, three weeks."
+        }
+      ]
+    },
+    {
+      "id": "offline",
+      "chunks": [
+        {
+          "caption": "No signal on the *jeep?*",
+          "tts": "No signal on the jeep?"
+        },
+        {
+          "caption": "Works *offline.* Syncs later.",
+          "tts": "It works offline and syncs later."
+        }
+      ]
+    },
+    {
+      "id": "celebrate",
+      "chunks": [
+        {
+          "caption": "Hit the *75%* pass mark…",
+          "tts": "Hit the seventy-five percent pass mark..."
+        },
+        {
+          "caption": "and *celebrate!*",
+          "tts": "and celebrate!"
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "chunks": [
+        {
+          "caption": "Good luck, future RPh!",
+          "tts": "Good luck, future R.P.H.!"
+        }
+      ]
+    }
+  ]
+}

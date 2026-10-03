@@ -1,0 +1,27 @@
+{
+  "name": "flashquizz-promo",
+  "version": "1.0.0",
+  "description": "30s promo video for FlashQuizz, built with Remotion",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts FlashQuizzPromo out/render.mp4 --codec=h264 && python tools/master.py",
+    "still": "remotion still src/index.ts FlashQuizzPromo",
+    "audio": "python tools/make_vo.py && python tools/layout.py && python tools/make_music.py && python tools/make_sfx.py",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
+    "@remotion/cli": "^4.0.532",
+    "@remotion/transitions": "^4.0.532",
+    "lucide-react": "^1.49.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.532"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
+  },
+  "private": true
+}
