@@ -17,7 +17,9 @@ import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppOfflineRouteImport } from './routes/_app/offline'
 import { Route as AppReviewRouteImport } from './routes/_app/review'
 import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
+import { Route as SignUpSplatRouteImport } from './routes/sign-up.$'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
+import { Route as AppAdminPeopleRouteImport } from './routes/_app/admin/people'
 import { Route as AppAdminReviewRouteImport } from './routes/_app/admin/review'
 import { Route as AppAdminTaxonomyRouteImport } from './routes/_app/admin/taxonomy'
 import { Route as AppExamIndexRouteImport } from './routes/_app/exam/index'
@@ -71,9 +73,19 @@ const SignInSplatRoute = SignInSplatRouteImport.update({
   path: '/sign-in/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignUpSplatRoute = SignUpSplatRouteImport.update({
+  id: '/sign-up/$',
+  path: '/sign-up/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminPeopleRoute = AppAdminPeopleRouteImport.update({
+  id: '/people',
+  path: '/people',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminReviewRoute = AppAdminReviewRouteImport.update({
@@ -152,6 +164,8 @@ export interface FileRoutesByFullPath {
   '/offline': typeof AppOfflineRoute
   '/review': typeof AppReviewRoute
   '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
+  '/admin/people': typeof AppAdminPeopleRoute
   '/admin/review': typeof AppAdminReviewRoute
   '/admin/taxonomy': typeof AppAdminTaxonomyRoute
   '/modules/$moduleSlug': typeof AppModulesModuleSlugRoute
@@ -173,7 +187,9 @@ export interface FileRoutesByTo {
   '/offline': typeof AppOfflineRoute
   '/review': typeof AppReviewRoute
   '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
   '/': typeof AppIndexRoute
+  '/admin/people': typeof AppAdminPeopleRoute
   '/admin/review': typeof AppAdminReviewRoute
   '/admin/taxonomy': typeof AppAdminTaxonomyRoute
   '/modules/$moduleSlug': typeof AppModulesModuleSlugRoute
@@ -198,7 +214,9 @@ export interface FileRoutesById {
   '/_app/offline': typeof AppOfflineRoute
   '/_app/review': typeof AppReviewRoute
   '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/people': typeof AppAdminPeopleRoute
   '/_app/admin/review': typeof AppAdminReviewRoute
   '/_app/admin/taxonomy': typeof AppAdminTaxonomyRoute
   '/_app/modules/$moduleSlug': typeof AppModulesModuleSlugRoute
@@ -224,6 +242,8 @@ export interface FileRouteTypes {
     | '/offline'
     | '/review'
     | '/sign-in/$'
+    | '/sign-up/$'
+    | '/admin/people'
     | '/admin/review'
     | '/admin/taxonomy'
     | '/modules/$moduleSlug'
@@ -245,7 +265,9 @@ export interface FileRouteTypes {
     | '/offline'
     | '/review'
     | '/sign-in/$'
+    | '/sign-up/$'
     | '/'
+    | '/admin/people'
     | '/admin/review'
     | '/admin/taxonomy'
     | '/modules/$moduleSlug'
@@ -269,7 +291,9 @@ export interface FileRouteTypes {
     | '/_app/offline'
     | '/_app/review'
     | '/sign-in/$'
+    | '/sign-up/$'
     | '/_app/'
+    | '/_app/admin/people'
     | '/_app/admin/review'
     | '/_app/admin/taxonomy'
     | '/_app/modules/$moduleSlug'
@@ -291,6 +315,7 @@ export interface RootRouteChildren {
   ForbiddenRoute: typeof ForbiddenRoute
   SetupRoute: typeof SetupRoute
   SignInSplatRoute: typeof SignInSplatRoute
+  SignUpSplatRoute: typeof SignUpSplatRoute
   ApiImagesImageIdRoute: typeof ApiImagesImageIdRoute
 }
 
@@ -352,11 +377,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sign-up/$': {
+      id: '/sign-up/$'
+      path: '/sign-up/$'
+      fullPath: '/sign-up/$'
+      preLoaderRoute: typeof SignUpSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/admin/': {
       id: '/_app/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/people': {
+      id: '/_app/admin/people'
+      path: '/people'
+      fullPath: '/admin/people'
+      preLoaderRoute: typeof AppAdminPeopleRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/review': {
@@ -454,6 +493,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppAdminRouteRouteChildren {
+  AppAdminPeopleRoute: typeof AppAdminPeopleRoute
   AppAdminReviewRoute: typeof AppAdminReviewRoute
   AppAdminTaxonomyRoute: typeof AppAdminTaxonomyRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
@@ -463,6 +503,7 @@ interface AppAdminRouteRouteChildren {
 }
 
 const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminPeopleRoute: AppAdminPeopleRoute,
   AppAdminReviewRoute: AppAdminReviewRoute,
   AppAdminTaxonomyRoute: AppAdminTaxonomyRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
@@ -510,6 +551,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForbiddenRoute: ForbiddenRoute,
   SetupRoute: SetupRoute,
   SignInSplatRoute: SignInSplatRoute,
+  SignUpSplatRoute: SignUpSplatRoute,
   ApiImagesImageIdRoute: ApiImagesImageIdRoute,
 }
 export const routeTree = rootRouteImport

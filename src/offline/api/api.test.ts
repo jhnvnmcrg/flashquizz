@@ -1,11 +1,11 @@
 import 'fake-indexeddb/auto'
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // The engine talks to the server; these tests only exercise the device side.
 vi.mock('../sync/engine', () => ({ requestPush: () => {}, requestSync: async () => {} }))
 
-import { deleteLocalDb, type LocalIndex, type LocalQuestion, openLocalDb, setMeta } from '../db.ts'
+import { deleteLocalDb, type LocalIndex, type LocalQuestion, openLocalDb, selectLocalDb, setMeta } from '../db.ts'
 import { localStore, loadLocalState } from '../store.ts'
 import { push } from '../sync/push.ts'
 import type { SyncTransport } from '../sync/pull.ts'
@@ -86,6 +86,11 @@ beforeEach(async () => {
   )
   await setMeta('content', { hash: 'h', syncedAt: new Date(), needsReview: 0, questionTotal: 3 })
   await loadLocalState()
+})
+
+// One person's copy (the guard picks it in the app).
+beforeAll(async () => {
+  await selectLocalDb('flashquizz-test')
 })
 
 afterEach(async () => {

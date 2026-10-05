@@ -28,7 +28,7 @@ export type SyncTransport = {
   progressSince(since: Date | null, after: Keyset | null): ReturnType<typeof progressSince>
   sessionsSince(since: Date | null, after: Keyset | null): ReturnType<typeof sessionsSince>
   attemptsSince(since: Date | null, after: Keyset | null): ReturnType<typeof attemptsSince>
-  push(changes: Omit<PushChanges, 'protocol'>): ReturnType<typeof applyPush>
+  push(changes: Omit<PushChanges, 'protocol' | 'userId'>): ReturnType<typeof applyPush>
 }
 
 export type PullStep = 'questions' | 'progress' | 'sessions' | 'answers'

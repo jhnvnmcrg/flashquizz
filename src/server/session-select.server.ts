@@ -9,11 +9,11 @@ import { eligibleQuestion } from './eligibility.server'
 
 /**
  * Eligible questions matching the filters/scope, shaped for the session
- * builder, in SQL. The app now selects on the device
+ * builder from `userId`'s progress, in SQL. The app now selects on the device
  * (src/lib/study/candidates.ts); this stays as the reference that
  * scripts/check-offline-parity.ts compares against.
  */
-export async function selectCandidates(filters: StudyFilters): Promise<Candidate[]> {
+export async function selectCandidates(userId: string, filters: StudyFilters): Promise<Candidate[]> {
   const db = getDb()
   const where: (SQL | undefined)[] = [eligibleQuestion()]
 
@@ -71,7 +71,7 @@ export async function selectCandidates(filters: StudyFilters): Promise<Candidate
     .from(questions)
     .innerJoin(modules, eq(modules.id, questions.moduleId))
     .innerJoin(sources, eq(sources.id, questions.sourceId))
-    .leftJoin(questionProgress, eq(questionProgress.questionId, questions.id))
+    .leftJoin(questionProgress, and(eq(questionProgress.userId, userId), eq(questionProgress.questionId, questions.id)))
     .where(and(...where))
 
   return rows.map((r) => ({

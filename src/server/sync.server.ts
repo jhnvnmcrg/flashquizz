@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-import { and, asc, eq, gte, inArray, isNotNull, type SQL, sql } from 'drizzle-orm'
+import { and, asc, eq, getTableColumns, gte, inArray, isNotNull, type SQL, sql } from 'drizzle-orm'
 import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 
 import { getDb } from '#/db/client.server'
@@ -34,8 +34,10 @@ const ATTEMPT_HISTORY_DAYS = 120
 /** Clock skew allowed between a device and the server. */
 const SKEW_MS = 5 * 60_000
 const EARLIEST = new Date('2020-01-01T00:00:00Z')
-/** Serialises uploads from several devices (pg_advisory_xact_lock key). */
-const SYNC_LOCK = 417_023
+
+// Rows go to the device without the owner column: a device copy only ever holds one person's data.
+const { userId: _progressUser, ...progressColumns } = getTableColumns(questionProgress)
+const { userId: _sessionUser, ...sessionColumns } = getTableColumns(studySessions)
 
 function groupBy<T, K>(items: readonly T[], key: (item: T) => K) {
   const out = new Map<K, T[]>()
@@ -87,8 +89,10 @@ const questionHash = sql<string>`left(md5(concat_ws('|', ${sql.join(
   sql`, `,
 )})), 12)`
 
-/** Eligible questions, plus any a session or bookmark still points at (so history renders). */
-const onDevice = sql`(${eligibleSql} or ${questions.id} in (select ${studySessionItems.questionId} from ${studySessionItems} union select ${questionProgress.questionId} from ${questionProgress} where ${questionProgress.bookmarked}))`
+/** Eligible questions, plus any of this person's sessions or bookmarks still points at (so history renders). */
+function onDevice(userId: string) {
+  return sql`(${eligibleSql} or ${questions.id} in (select ${studySessionItems.questionId} from ${studySessionItems} inner join ${studySessions} on ${studySessions.id} = ${studySessionItems.sessionId} where ${studySessions.userId} = ${userId} union select ${questionProgress.questionId} from ${questionProgress} where ${questionProgress.userId} = ${userId} and ${questionProgress.bookmarked}))`
+}
 
 function questionRows(where: SQL) {
   return getDb()
@@ -117,15 +121,16 @@ function questionRows(where: SQL) {
 }
 
 /**
- * What the device should hold, as content hashes. When `clientHash` matches,
- * only `unchanged` comes back. `serverTime` is read first, so anything
- * committed during the pull is picked up next time.
+ * What `userId`'s device should hold, as content hashes. When `clientHash`
+ * matches, only `unchanged` comes back. `serverTime` is read first, so
+ * anything committed during the pull is picked up next time. Only admins
+ * hear how many questions need checking.
  */
-export async function loadManifest(clientHash: string | null) {
+export async function loadManifest(userId: string, isAdmin: boolean, clientHash: string | null) {
   const serverTime = new Date()
   const db = getDb()
   const [rows, taxonomy, perModuleSource, needsReview, images] = await Promise.all([
-    questionRows(onDevice),
+    questionRows(onDevice(userId)),
     loadTaxonomy(),
     db
       .select({
@@ -138,7 +143,9 @@ export async function loadManifest(clientHash: string | null) {
       .innerJoin(sources, eq(sources.id, questions.sourceId))
       .groupBy(questions.moduleId, sources.slug, sources.shortName, sources.sortOrder)
       .orderBy(asc(sources.sortOrder)),
-    db.select({ n: sql<number>`count(*)::int` }).from(questions).where(eq(questions.status, 'needs_review')),
+    isAdmin
+      ? db.select({ n: sql<number>`count(*)::int` }).from(questions).where(eq(questions.status, 'needs_review'))
+      : [],
     db
       .select({ id: questionImages.id, questionId: questionImages.questionId, sha: questionImages.sha256 })
       .from(questionImages)
@@ -187,7 +194,7 @@ export async function loadSyncQuestions(ids: number[]) {
           archived: r.archived,
         },
         // Bookmarks come from the device's own progress, not the content copy.
-        view: { ...view, bookmarked: false } as typeof view & {
+        view: view as typeof view & {
           answerKey: ChoiceKey
           rationale: string
           mnemonic: string
@@ -206,13 +213,14 @@ function afterKeyset(at: AnyPgColumn, id: AnyPgColumn, after: Keyset, idType: 'i
   return sql`(date_trunc('milliseconds', ${at}), ${id}) > (${after.at.toISOString()}::timestamptz, ${after.id}::${sql.raw(idType)})`
 }
 
-export async function progressSince(since: Date | null, after: Keyset | null, limit = 1000) {
+export async function progressSince(userId: string, since: Date | null, after: Keyset | null, limit = 1000) {
   const where = [
+    eq(questionProgress.userId, userId),
     since ? gte(questionProgress.updatedAt, since) : undefined,
     after ? afterKeyset(questionProgress.updatedAt, questionProgress.questionId, after, 'int') : undefined,
   ]
   const rows = await getDb()
-    .select()
+    .select(progressColumns)
     .from(questionProgress)
     .where(and(...where))
     .orderBy(asc(questionProgress.updatedAt), asc(questionProgress.questionId))
@@ -221,14 +229,15 @@ export async function progressSince(since: Date | null, after: Keyset | null, li
   return { rows, next: rows.length === limit && last ? { at: last.updatedAt, id: String(last.questionId) } : null }
 }
 
-export async function sessionsSince(since: Date | null, after: Keyset | null, limit = 50) {
+export async function sessionsSince(userId: string, since: Date | null, after: Keyset | null, limit = 50) {
   const db = getDb()
   const where = [
+    eq(studySessions.userId, userId),
     since ? gte(studySessions.updatedAt, since) : undefined,
     after ? afterKeyset(studySessions.updatedAt, studySessions.id, after, 'uuid') : undefined,
   ]
   const sessions = await db
-    .select()
+    .select(sessionColumns)
     .from(studySessions)
     .where(and(...where))
     .orderBy(asc(studySessions.updatedAt), asc(studySessions.id))
@@ -253,7 +262,7 @@ export async function sessionsSince(since: Date | null, after: Keyset | null, li
   }
 }
 
-export async function attemptsSince(since: Date | null, after: Keyset | null, limit = 2000) {
+export async function attemptsSince(userId: string, since: Date | null, after: Keyset | null, limit = 2000) {
   const from = since ?? new Date(Date.now() - ATTEMPT_HISTORY_DAYS * DAY_MS)
   const rows = await getDb()
     .select({
@@ -268,7 +277,11 @@ export async function attemptsSince(since: Date | null, after: Keyset | null, li
     })
     .from(attempts)
     .where(
-      and(gte(attempts.createdAt, from), after ? afterKeyset(attempts.createdAt, attempts.id, after, 'bigint') : undefined),
+      and(
+        eq(attempts.userId, userId),
+        gte(attempts.createdAt, from),
+        after ? afterKeyset(attempts.createdAt, attempts.id, after, 'bigint') : undefined,
+      ),
     )
     .orderBy(asc(attempts.createdAt), asc(attempts.id))
     .limit(limit)
@@ -306,7 +319,8 @@ function gradeItem(s: SessionUpload, i: SessionUpload['items'][number], answerKe
   return isAnswerCorrect({ mode: s.mode, selectedKey: i.selectedKey, answerKey: answerKeys.get(i.questionId) ?? null })
 }
 
-async function rebuildProgress(tx: Tx, questionIds: number[]) {
+/** Recompute `userId`'s progress on these questions from their answers and bookmarks. */
+async function rebuildProgress(tx: Tx, userId: string, questionIds: number[]) {
   if (!questionIds.length) return []
   const answers = await tx
     .select({
@@ -317,8 +331,11 @@ async function rebuildProgress(tx: Tx, questionIds: number[]) {
       answeredAt: attempts.answeredAt,
     })
     .from(attempts)
-    .where(inArray(attempts.questionId, questionIds))
-  const marks = await tx.select().from(bookmarkEvents).where(inArray(bookmarkEvents.questionId, questionIds))
+    .where(and(eq(attempts.userId, userId), inArray(attempts.questionId, questionIds)))
+  const marks = await tx
+    .select()
+    .from(bookmarkEvents)
+    .where(and(eq(bookmarkEvents.userId, userId), inArray(bookmarkEvents.questionId, questionIds)))
   const events: (ProgressEvent & { questionId: number })[] = [
     ...answers.map((a) => ({
       kind: 'answer' as const,
@@ -335,13 +352,13 @@ async function rebuildProgress(tx: Tx, questionIds: number[]) {
       questionId: b.questionId,
     })),
   ]
-  const rows = [...foldAll(events)].map(([questionId, p]) => ({ questionId, ...p }))
+  const rows = [...foldAll(events)].map(([questionId, p]) => ({ userId, questionId, ...p }))
   if (rows.length) {
     await tx
       .insert(questionProgress)
       .values(rows)
       .onConflictDoUpdate({
-        target: questionProgress.questionId,
+        target: [questionProgress.userId, questionProgress.questionId],
         set: {
           box: sql`excluded.box`,
           dueAt: sql`excluded.due_at`,
@@ -357,17 +374,21 @@ async function rebuildProgress(tx: Tx, questionIds: number[]) {
         },
       })
   }
-  return tx.select().from(questionProgress).where(inArray(questionProgress.questionId, questionIds))
+  return tx
+    .select(progressColumns)
+    .from(questionProgress)
+    .where(and(eq(questionProgress.userId, userId), inArray(questionProgress.questionId, questionIds)))
 }
 
 /**
- * Store a device's offline work in one transaction (serialised across
- * devices). Every record is checked on its own: bad ones come back in
- * `rejected`, the rest are kept. Re-sending the same records is harmless.
+ * Store a device's offline work for `userId` in one transaction (serialised
+ * across that person's devices). Every record is checked on its own: bad ones
+ * come back in `rejected`, the rest are kept. Re-sending the same records is
+ * harmless.
  */
-export async function applyPush(input: PushChanges, now = new Date()) {
+export async function applyPush(userId: string, input: PushChanges, now = new Date()) {
   return withTransaction(async (tx) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(${SYNC_LOCK})`)
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}))`)
     const rejected: SyncRejection[] = []
     const plausible = (d: Date) => d.getTime() >= EARLIEST.getTime() && d.getTime() <= now.getTime() + SKEW_MS
 
@@ -399,8 +420,14 @@ export async function applyPush(input: PushChanges, now = new Date()) {
     for (const s of input.sessions) {
       const problem = sessionProblem(s, answerKeys, plausible)
       const existing = storedById.get(s.id)
-      if (problem || (existing && existing.mode !== s.mode)) {
-        rejected.push({ kind: 'session', id: s.id, reason: problem ?? 'mode differs from the stored session' })
+      const clash =
+        existing && existing.userId !== userId
+          ? 'session id already taken'
+          : existing && existing.mode !== s.mode
+            ? 'mode differs from the stored session'
+            : null
+      if (problem || clash) {
+        rejected.push({ kind: 'session', id: s.id, reason: problem ?? clash ?? 'invalid session' })
         continue
       }
       const incoming = { ...s, items: s.items.map((i) => ({ ...i, isCorrect: gradeItem(s, i, answerKeys) })) }
@@ -416,10 +443,11 @@ export async function applyPush(input: PushChanges, now = new Date()) {
         : null
       const merged = mergeSession(base, incoming)
       const autoSubmitted = s.autoSubmitted || (existing?.autoSubmitted ?? false)
-      await tx
+      const saved = await tx
         .insert(studySessions)
         .values({
           id: s.id,
+          userId,
           mode: s.mode,
           status: merged.status,
           filters: s.filters,
@@ -443,7 +471,14 @@ export async function applyPush(input: PushChanges, now = new Date()) {
             correctCount: merged.correctCount,
             updatedAt: sql`now()`,
           },
+          // Never touch another person's session that happens to share the id.
+          setWhere: eq(studySessions.userId, userId),
         })
+        .returning({ id: studySessions.id })
+      if (!saved.length) {
+        rejected.push({ kind: 'session', id: s.id, reason: 'session id already taken' })
+        continue
+      }
       await tx
         .insert(studySessionItems)
         .values(
@@ -479,7 +514,7 @@ export async function applyPush(input: PushChanges, now = new Date()) {
       const found = await tx
         .select({ id: studySessions.id })
         .from(studySessions)
-        .where(inArray(studySessions.id, askedSessions))
+        .where(and(eq(studySessions.userId, userId), inArray(studySessions.id, askedSessions)))
       for (const f of found) sessionIds.add(f.id)
     }
     const touched = new Set<number>()
@@ -494,6 +529,7 @@ export async function applyPush(input: PushChanges, now = new Date()) {
         continue
       }
       attemptRows.push({
+        userId,
         clientId: a.clientId,
         questionId: a.questionId,
         sessionId: a.sessionId && sessionIds.has(a.sessionId) ? a.sessionId : null,
@@ -522,14 +558,14 @@ export async function applyPush(input: PushChanges, now = new Date()) {
         rejected.push({ kind: 'bookmark', id: b.clientId, reason: 'time out of range' })
         continue
       }
-      bookmarkRows.push({ clientId: b.clientId, questionId: b.questionId, bookmarked: b.bookmarked, at: b.at })
+      bookmarkRows.push({ userId, clientId: b.clientId, questionId: b.questionId, bookmarked: b.bookmarked, at: b.at })
       touched.add(b.questionId)
     }
     if (bookmarkRows.length) {
       await tx.insert(bookmarkEvents).values(bookmarkRows).onConflictDoNothing({ target: bookmarkEvents.clientId })
     }
 
-    const progress = await rebuildProgress(tx, [...touched])
+    const progress = await rebuildProgress(tx, userId, [...touched])
     return {
       serverTime: now,
       accepted: { attempts: attemptRows.length, bookmarkEvents: bookmarkRows.length, sessions: input.sessions.length - rejected.filter((r) => r.kind === 'session').length },

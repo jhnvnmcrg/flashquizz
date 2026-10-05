@@ -8,7 +8,7 @@ import { attempts, modules, questionGroups, questionImages, questions, sources, 
 import { questionFlagSchema, questionStatusSchema } from '#/lib/schemas/enums'
 import { questionEditorSchema, updateQuestionSchema } from '#/lib/schemas/question'
 
-import { ownerOnly } from './owner'
+import { requireAdmin } from './auth'
 
 const listFilterSchema = z.object({
   module: z.string().optional(),
@@ -18,7 +18,7 @@ const listFilterSchema = z.object({
 
 /** Light rows for the question bank table (no rationale, no image data). */
 export const listAdminQuestions = createServerFn({ method: 'GET' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(listFilterSchema)
   .handler(async ({ data }) => {
     const db = getDb()
@@ -57,9 +57,9 @@ export const listAdminQuestions = createServerFn({ method: 'GET' })
   })
 
 export const getAdminQuestion = createServerFn({ method: 'GET' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(z.object({ id: z.number().int().positive() }))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const db = getDb()
     const q = await db.query.questions.findFirst({
       where: eq(questions.id, data.id),
@@ -67,7 +67,6 @@ export const getAdminQuestion = createServerFn({ method: 'GET' })
         group: true,
         module: { columns: { slug: true, code: true, accentHue: true } },
         source: { columns: { slug: true, shortName: true, name: true } },
-        progress: true,
         images: {
           columns: { id: true, role: true, choiceKey: true, alt: true, width: true, height: true, byteSize: true, sortOrder: true },
           orderBy: asc(questionImages.sortOrder),
@@ -84,7 +83,7 @@ export const getAdminQuestion = createServerFn({ method: 'GET' })
           answeredAt: attempts.answeredAt,
         })
         .from(attempts)
-        .where(eq(attempts.questionId, data.id))
+        .where(and(eq(attempts.userId, context.userId), eq(attempts.questionId, data.id)))
         .orderBy(desc(attempts.answeredAt))
         .limit(10),
       q.groupId
@@ -99,7 +98,7 @@ export const getAdminQuestion = createServerFn({ method: 'GET' })
   })
 
 export const updateQuestion = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(updateQuestionSchema)
   .handler(async ({ data }) => {
     const v = data.values
@@ -129,7 +128,7 @@ export const updateQuestion = createServerFn({ method: 'POST' })
   })
 
 export const createQuestion = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(questionEditorSchema)
   .handler(async ({ data: v }) => {
     const db = getDb()
@@ -166,7 +165,7 @@ export const createQuestion = createServerFn({ method: 'POST' })
   })
 
 export const setQuestionsStatus = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(z.object({ ids: z.array(z.number().int().positive()).min(1).max(2000), status: questionStatusSchema }))
   .handler(async ({ data }) => {
     await getDb()
@@ -177,7 +176,7 @@ export const setQuestionsStatus = createServerFn({ method: 'POST' })
   })
 
 export const getReviewQueue = createServerFn({ method: 'GET' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(z.object({ flag: questionFlagSchema.optional() }))
   .handler(async ({ data }) => {
     const db = getDb()
@@ -210,7 +209,7 @@ export const getReviewQueue = createServerFn({ method: 'GET' })
   })
 
 export const saveGroupContext = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(z.object({ groupId: z.number().int().positive(), context: z.string().trim().min(1) }))
   .handler(async ({ data }) => {
     await getDb().update(questionGroups).set({ context: data.context }).where(eq(questionGroups.id, data.groupId))

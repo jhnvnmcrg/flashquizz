@@ -4,7 +4,7 @@ import { cn } from '#/lib/utils'
 import type { ImageMeta } from '#/lib/question-view'
 
 /**
- * Owner-gated image URL. In `vite dev`, Nitro treats <img> requests
+ * Sign-in-gated image URL. In `vite dev`, Nitro treats <img> requests
  * (Sec-Fetch-Dest: image) as static assets and never reaches the app route,
  * so dev loads the bytes with fetch() and shows a blob URL instead.
  */

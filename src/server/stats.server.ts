@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 
 import { getDb } from '#/db/client.server'
 import { questionProgress, questions } from '#/db/schema'
@@ -7,11 +7,11 @@ import { addTally, emptyTally, type Tally } from '#/lib/tally'
 import { eligibleQuestion } from './eligibility.server'
 
 /**
- * Eligible-question tallies grouped by module and topic, in SQL. The app now
- * computes these on the device (src/lib/study/stats.ts); this stays as the
- * reference that scripts/check-offline-parity.ts compares against.
+ * `userId`'s eligible-question tallies grouped by module and topic, in SQL.
+ * The app now computes these on the device (src/lib/study/stats.ts); this
+ * stays as the reference that scripts/check-offline-parity.ts compares against.
  */
-export async function topicTallies() {
+export async function topicTallies(userId: string) {
   const db = getDb()
   const rows = await db
     .select({
@@ -26,7 +26,7 @@ export async function topicTallies() {
       missed: sql<number>`count(*) filter (where ${questionProgress.lastCorrect} = false)::int`,
     })
     .from(questions)
-    .leftJoin(questionProgress, eq(questionProgress.questionId, questions.id))
+    .leftJoin(questionProgress, and(eq(questionProgress.userId, userId), eq(questionProgress.questionId, questions.id)))
     .where(eligibleQuestion())
     .groupBy(questions.moduleId, questions.topicId)
 

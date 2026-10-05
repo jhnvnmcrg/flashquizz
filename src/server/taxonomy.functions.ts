@@ -11,7 +11,7 @@ import {
   saveTopicSchema,
 } from '#/lib/schemas/taxonomy'
 
-import { ownerOnly } from './owner'
+import { requireAdmin } from './auth'
 import { loadTaxonomy } from './taxonomy.server'
 
 const slugify = (s: string) =>
@@ -23,11 +23,11 @@ const slugify = (s: string) =>
     .slice(0, 48)
 
 export const getTaxonomy = createServerFn({ method: 'GET' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .handler(() => loadTaxonomy())
 
 export const saveModule = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(saveModuleSchema)
   .handler(async ({ data }) => {
     const { id, ...values } = data
@@ -36,7 +36,7 @@ export const saveModule = createServerFn({ method: 'POST' })
   })
 
 export const saveSubject = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(saveSubjectSchema)
   .handler(async ({ data }) => {
     const db = getDb()
@@ -58,7 +58,7 @@ export const saveSubject = createServerFn({ method: 'POST' })
   })
 
 export const saveTopic = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(saveTopicSchema)
   .handler(async ({ data }) => {
     const db = getDb()
@@ -79,7 +79,7 @@ export const saveTopic = createServerFn({ method: 'POST' })
   })
 
 export const deleteTopic = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(deleteTopicSchema)
   .handler(async ({ data }) => {
     const db = getDb()
@@ -91,7 +91,7 @@ export const deleteTopic = createServerFn({ method: 'POST' })
   })
 
 export const reorderTaxonomy = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(reorderSchema)
   .handler(async ({ data }) => {
     const db = getDb()

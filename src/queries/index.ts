@@ -4,6 +4,7 @@ import type { QuestionFlag, QuestionStatus } from '#/lib/schemas/enums'
 import * as local from '#/offline/api'
 import { requestSync } from '#/offline/sync/engine'
 import { getAdminQuestion, getReviewQueue, listAdminQuestions } from '#/server/admin.functions'
+import { listPeople } from '#/server/people.functions'
 import { getTaxonomy } from '#/server/taxonomy.functions'
 import { getViewer } from '#/server/viewer.functions'
 
@@ -106,6 +107,12 @@ export const adminQuestionQuery = (id: number) =>
     queryKey: ['admin', 'question', id],
     queryFn: () => getAdminQuestion({ data: { id } }),
   })
+
+/** Members and pending invitations (Clerk). */
+export const peopleQuery = queryOptions({
+  queryKey: ['admin', 'people'],
+  queryFn: () => listPeople(),
+})
 
 export const reviewQueueQuery = (flag?: QuestionFlag) =>
   queryOptions({

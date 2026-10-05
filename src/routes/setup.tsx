@@ -7,7 +7,7 @@ import { Logo } from '#/components/app/logo'
 import { Button } from '#/components/ui/button'
 import { Progress } from '#/components/ui/progress'
 import { useOnline } from '#/hooks/use-online'
-import { ensureOwner, hasLocalContent } from '#/offline/guard'
+import { ensureUser, hasLocalContent } from '#/offline/guard'
 import { localStore } from '#/offline/store'
 import { requestSync } from '#/offline/sync/engine'
 import { type SyncStatus, syncStore } from '#/offline/sync/status'
@@ -15,7 +15,7 @@ import { type SyncStatus, syncStore } from '#/offline/sync/status'
 /** First run on a device: download the question bank before the study screens open. */
 export const Route = createFileRoute('/setup')({
   beforeLoad: async ({ context }) => {
-    await ensureOwner(context.queryClient)
+    await ensureUser(context.queryClient)
     if (await hasLocalContent()) throw redirect({ to: '/' })
   },
   head: () => ({ meta: [{ title: 'Getting ready · FlashQuizz' }] }),

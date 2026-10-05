@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useMatches } from '@tanstack/react-router'
+import { useSelector } from '@tanstack/react-store'
 import { BookOpenCheckIcon, HomeIcon, LibraryBigIcon, TimerIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '#/lib/utils'
+import { userStore } from '#/offline/auth'
 import { dashboardQuery } from '#/queries'
 
 import { AccountMenu } from './account-menu'
@@ -15,7 +17,7 @@ const NAV = [
   { to: '/', label: 'Today', icon: HomeIcon, exact: true },
   { to: '/review', label: 'Review', icon: BookOpenCheckIcon, exact: false },
   { to: '/exam', label: 'Mock exam', icon: TimerIcon, exact: false },
-  { to: '/admin/questions', label: 'Question bank', icon: LibraryBigIcon, exact: false },
+  { to: '/admin/questions', label: 'Question bank', icon: LibraryBigIcon, exact: false, adminOnly: true },
 ] as const
 
 function DueBadge({ className }: { className?: string }) {
@@ -38,6 +40,8 @@ function DueBadge({ className }: { className?: string }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const focus = useMatches({ select: (m) => m.some((r) => r.staticData?.chrome === 'focus') })
+  const isAdmin = useSelector(userStore, (u) => u?.isAdmin ?? false)
+  const nav = NAV.filter((item) => isAdmin || !('adminOnly' in item))
 
   if (focus) return <div className="min-h-dvh">{children}</div>
 
@@ -49,7 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Logo />
           </Link>
           <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
-            {NAV.map((item) => (
+            {nav.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
@@ -71,9 +75,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-28 md:pb-12">{children}</main>
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-40 grid border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden',
+          nav.length === 4 ? 'grid-cols-4' : 'grid-cols-3',
+        )}
       >
-        {NAV.map((item) => (
+        {nav.map((item) => (
           <Link
             key={item.to}
             to={item.to}

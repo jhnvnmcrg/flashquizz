@@ -6,7 +6,7 @@ import { getDb } from '#/db/client.server'
 import { questionImages } from '#/db/schema'
 import { choiceKeySchema, imageRoleSchema } from '#/lib/schemas/enums'
 
-import { ownerOnly } from './owner'
+import { requireAdmin } from './auth'
 
 const MAX_BYTES = 2 * 1024 * 1024
 const ALLOWED = new Set(['image/png', 'image/jpeg', 'image/webp'])
@@ -21,7 +21,7 @@ const uploadMetaSchema = z.object({
 })
 
 export const uploadQuestionImage = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator((data: unknown) => {
     if (!(data instanceof FormData)) throw new Error('Expected form data')
     const file = data.get('file')
@@ -69,7 +69,7 @@ export const uploadQuestionImage = createServerFn({ method: 'POST' })
   })
 
 export const updateQuestionImage = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(
     z.object({
       id: z.number().int().positive(),
@@ -87,7 +87,7 @@ export const updateQuestionImage = createServerFn({ method: 'POST' })
   })
 
 export const deleteQuestionImage = createServerFn({ method: 'POST' })
-  .middleware([ownerOnly])
+  .middleware([requireAdmin])
   .validator(z.object({ id: z.number().int().positive() }))
   .handler(async ({ data }) => {
     await getDb().delete(questionImages).where(eq(questionImages.id, data.id))

@@ -49,7 +49,7 @@ export function AccountMenu() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuLabel className="font-normal">
-            <span className="block text-sm font-semibold">{user?.fullName || 'Owner'}</span>
+            <span className="block text-sm font-semibold">{user?.fullName || 'Your account'}</span>
             {email ? <span className="block truncate text-xs text-muted-foreground">{email}</span> : null}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
