@@ -30,7 +30,6 @@ export async function loadQuestionViews(ids: number[], withAnswers: boolean) {
       module: { columns: { slug: true, code: true, shortName: true, accentHue: true } },
       topic: { columns: { name: true } },
       source: { columns: { shortName: true } },
-      progress: { columns: { bookmarked: true } },
       images: {
         columns: { id: true, role: true, choiceKey: true, alt: true, width: true, height: true, sortOrder: true },
       },
@@ -53,7 +52,8 @@ export async function loadQuestionViews(ids: number[], withAnswers: boolean) {
       images: r.images
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map(({ sortOrder: _s, ...img }) => img),
-      bookmarked: r.progress?.bookmarked ?? false,
+      // Bookmarks are personal: the device fills them in from its own progress.
+      bookmarked: false,
     }
     if (withAnswers) {
       view.answerKey = r.answerKey as ChoiceKey

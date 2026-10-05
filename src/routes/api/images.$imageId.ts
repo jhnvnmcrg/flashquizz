@@ -3,11 +3,11 @@ import { eq } from 'drizzle-orm'
 
 import { getDb } from '#/db/client.server'
 import { questionImages } from '#/db/schema'
-import { ownerOnlyRequest } from '#/server/owner'
+import { requireUserRequest } from '#/server/auth'
 
 export const Route = createFileRoute('/api/images/$imageId')({
   server: {
-    middleware: [ownerOnlyRequest],
+    middleware: [requireUserRequest],
     handlers: {
       GET: async ({ params, request }) => {
         const id = Number(params.imageId)

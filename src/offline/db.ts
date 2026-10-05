@@ -9,10 +9,10 @@ import type { IndexedQuestion } from '#/lib/study/candidates'
 import type { SyncManifest } from '#/server/sync.server'
 
 /**
- * The device's copy of FlashQuizz (IndexedDB). Question images live in Cache
- * Storage instead (`fq-images`), which is sturdier for binary data on iOS.
+ * A person's copy of FlashQuizz on this device (IndexedDB), one database per
+ * person (see `device.ts`). Question images live in Cache Storage instead
+ * (`fq-images`), which is sturdier for binary data on iOS.
  */
-export const DB_NAME = 'flashquizz'
 const DB_VERSION = 1
 
 type FullManifest = Extract<SyncManifest, { unchanged: false }>
@@ -84,8 +84,6 @@ export type LocalBookmarkEvent = {
 export type DeadLetter = SyncRejection & { record: unknown; at: Date }
 
 export type Meta = {
-  /** Last time the server confirmed this device belongs to the owner. */
-  owner: { userId: string; confirmedAt: Date }
   content: { hash: string; syncedAt: Date; needsReview: number; questionTotal: number }
   images: ManifestImage[]
   watermarks: { progress: Date | null; sessions: Date | null; attempts: Date | null }
@@ -106,10 +104,26 @@ interface FlashQuizzDB extends DBSchema {
 
 export type LocalDb = IDBPDatabase<FlashQuizzDB>
 
+let selected: string | null = null
 let opening: Promise<LocalDb> | null = null
 
-export function openLocalDb() {
-  opening ??= openDB<FlashQuizzDB>(DB_NAME, DB_VERSION, {
+/**
+ * Open this database from now on. The guard picks it once it knows who is
+ * signed in; null closes the copy and keeps it closed (signing out, or
+ * switching to another person), so nothing still running can reopen it.
+ */
+export async function selectLocalDb(name: string | null) {
+  if (name === selected) return
+  await closeLocalDb()
+  selected = name
+}
+
+export const selectedLocalDb = () => selected
+
+async function open() {
+  const name = selected
+  if (!name) throw new Error('No one’s copy is open on this device')
+  return openDB<FlashQuizzDB>(name, DB_VERSION, {
     upgrade(db) {
       db.createObjectStore('meta')
       db.createObjectStore('taxonomy')
@@ -128,6 +142,18 @@ export function openLocalDb() {
       void closeLocalDb()
     },
   })
+}
+
+/** The open person's copy. */
+export function openLocalDb() {
+  if (!opening) {
+    const attempt = open()
+    opening = attempt
+    // A failed open (no copy picked yet) shouldn't stick.
+    attempt.catch(() => {
+      if (opening === attempt) opening = null
+    })
+  }
   return opening
 }
 
@@ -156,8 +182,8 @@ export async function countPending() {
   return { attempts, bookmarks, sessions, total: attempts + bookmarks + sessions }
 }
 
-/** Remove the whole local copy (questions, progress, sessions, queued answers). */
-export async function deleteLocalDb() {
-  await closeLocalDb()
-  await deleteDB(DB_NAME)
+/** Remove a person's whole copy (questions, progress, sessions, queued answers); the open one by default. */
+export async function deleteLocalDb(name = selected) {
+  if (name === selected) await closeLocalDb()
+  if (name) await deleteDB(name)
 }

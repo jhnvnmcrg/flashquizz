@@ -1,4 +1,4 @@
-import { ClerkFailed, SignIn } from '@clerk/tanstack-react-start'
+import { ClerkFailed, SignUp } from '@clerk/tanstack-react-start'
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
@@ -6,28 +6,27 @@ import { Logo } from '#/components/app/logo'
 import { useOnline } from '#/hooks/use-online'
 import { clearLease } from '#/offline/auth'
 
-export const Route = createFileRoute('/sign-in/$')({
-  component: SignInPage,
+/** Where invitation emails land (FlashQuizz is invite-only; Clerk refuses sign-ups without one). */
+export const Route = createFileRoute('/sign-up/$')({
+  head: () => ({ meta: [{ title: 'Join · FlashQuizz' }] }),
+  component: SignUpPage,
 })
 
-function SignInPage() {
+function SignUpPage() {
   const online = useOnline()
   useEffect(() => {
-    // Someone may sign in as a different person: the next visit checks with
-    // the server before opening anyone's copy. (Offline nobody can sign in,
-    // so the lease stays.)
+    // Whoever signs up here, the next visit checks with the server before opening a copy.
     if (navigator.onLine) void clearLease().catch(() => undefined)
   }, [])
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-8 px-4 py-12">
       <div className="text-center">
         <Logo className="text-foreground" />
-        <p className="mt-2 text-sm text-muted-foreground">Your PhLE reviewer. Sign in to continue.</p>
+        <p className="mt-2 text-sm text-muted-foreground">You’ve been invited to FlashQuizz, a PhLE reviewer.</p>
       </div>
       {online ? (
         <>
-          <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" forceRedirectUrl="/" />
-          {/* The browser can claim to be online with no real connection. */}
+          <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" forceRedirectUrl="/" />
           <ClerkFailed>
             <NeedsConnection />
           </ClerkFailed>
@@ -42,7 +41,7 @@ function SignInPage() {
 function NeedsConnection() {
   return (
     <p className="max-w-sm rounded-xl border bg-card px-5 py-4 text-center text-muted-foreground">
-      Signing in needs an internet connection. Connect, then reload this page.
+      Signing up needs an internet connection. Connect, then reload this page.
     </p>
   )
 }

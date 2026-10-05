@@ -196,6 +196,8 @@ export const questionImages = pgTable(
 export const questionProgress = pgTable(
   'question_progress',
   {
+    /** Clerk user ID: each person has their own progress. */
+    userId: text(),
     questionId: integer()
       .primaryKey()
       .references(() => questions.id, { onDelete: 'cascade' }),
@@ -218,6 +220,8 @@ export const questionProgress = pgTable(
       .where(sql`${t.bookmarked}`),
     // Sync cursor (devices pull progress changed since their last pull).
     index().on(t.updatedAt, t.questionId),
+    uniqueIndex().on(t.userId, t.questionId),
+    index().on(t.userId, t.updatedAt, t.questionId),
   ],
 )
 
@@ -225,6 +229,8 @@ export const studySessions = pgTable(
   'study_sessions',
   {
     id: uuid().primaryKey().defaultRandom(),
+    /** Clerk user ID of the person who studied (session items belong through it). */
+    userId: text(),
     mode: sessionMode().notNull(),
     status: sessionStatus().notNull().default('active'),
     filters: jsonb().$type<StudyFilters>().notNull(),
@@ -247,6 +253,7 @@ export const studySessions = pgTable(
     ),
     index().on(t.status, t.mode, t.startedAt.desc()),
     index().on(t.updatedAt, t.id),
+    index().on(t.userId, t.updatedAt, t.id),
   ],
 )
 
@@ -277,6 +284,8 @@ export const attempts = pgTable(
   'attempts',
   {
     id: bigint({ mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    /** Clerk user ID of the person who answered. */
+    userId: text(),
     questionId: integer()
       .notNull()
       .references(() => questions.id, { onDelete: 'cascade' }),
@@ -297,6 +306,7 @@ export const attempts = pgTable(
     index().on(t.questionId, t.answeredAt.desc()),
     index().on(t.answeredAt),
     index().on(t.createdAt, t.id),
+    index().on(t.userId, t.createdAt, t.id),
   ],
 )
 
@@ -308,6 +318,8 @@ export const bookmarkEvents = pgTable(
   'bookmark_events',
   {
     clientId: uuid().primaryKey().defaultRandom(),
+    /** Clerk user ID of the person who bookmarked. */
+    userId: text(),
     questionId: integer()
       .notNull()
       .references(() => questions.id, { onDelete: 'cascade' }),
@@ -315,7 +327,7 @@ export const bookmarkEvents = pgTable(
     at: timestamp({ withTimezone: true }).notNull(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index().on(t.questionId, t.at)],
+  (t) => [index().on(t.questionId, t.at), index().on(t.userId, t.questionId, t.at)],
 )
 
 // ── Relations (for db.query) ────────────────────────────────────────────────
@@ -355,10 +367,8 @@ export const questionsRelations = relations(questions, ({ one, many }) => ({
     references: [questionGroups.id],
   }),
   images: many(questionImages),
-  progress: one(questionProgress, {
-    fields: [questions.id],
-    references: [questionProgress.questionId],
-  }),
+  /** One row per person who has studied the question. */
+  progress: many(questionProgress),
   attempts: many(attempts),
 }))
 

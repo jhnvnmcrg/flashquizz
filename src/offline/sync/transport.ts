@@ -8,14 +8,18 @@ import {
   pushChanges,
 } from '#/server/sync.functions'
 
+import { userStore } from '../auth'
 import type { SyncTransport } from './pull'
 
-/** The real server, over the owner-only sync server functions. */
+/** Every call names whose copy this is; the server refuses if another account is signed in. */
+const caller = () => ({ protocol: SYNC_PROTOCOL, userId: userStore.state?.userId })
+
+/** The real server, over the sync server functions. */
 export const serverTransport: SyncTransport = {
-  manifest: (contentHash) => getSyncManifest({ data: { protocol: SYNC_PROTOCOL, contentHash } }),
-  questions: (ids) => getSyncQuestions({ data: { protocol: SYNC_PROTOCOL, ids } }),
-  progressSince: (since, after) => getProgressSince({ data: { protocol: SYNC_PROTOCOL, since, after } }),
-  sessionsSince: (since, after) => getSessionsSince({ data: { protocol: SYNC_PROTOCOL, since, after } }),
-  attemptsSince: (since, after) => getAttemptsSince({ data: { protocol: SYNC_PROTOCOL, since, after } }),
-  push: (changes) => pushChanges({ data: { protocol: SYNC_PROTOCOL, ...changes } }),
+  manifest: (contentHash) => getSyncManifest({ data: { ...caller(), contentHash } }),
+  questions: (ids) => getSyncQuestions({ data: { ...caller(), ids } }),
+  progressSince: (since, after) => getProgressSince({ data: { ...caller(), since, after } }),
+  sessionsSince: (since, after) => getSessionsSince({ data: { ...caller(), since, after } }),
+  attemptsSince: (since, after) => getAttemptsSince({ data: { ...caller(), since, after } }),
+  push: (changes) => pushChanges({ data: { ...caller(), ...changes } }),
 }

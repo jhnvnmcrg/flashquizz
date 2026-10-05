@@ -3,7 +3,7 @@ import { createCsrfMiddleware, createStart } from '@tanstack/react-start'
 import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
 
 import { freshSession } from './integrations/clerk/fresh-session'
-import { ownerOnly } from './server/owner'
+import { requireUser } from './server/auth'
 
 const csrfMiddleware = createCsrfMiddleware({
   filter: (context) => context.handlerType === 'serverFn',
@@ -18,6 +18,7 @@ export const startInstance = createStart(() => ({
   // shell for every page, and study data will come from the device.
   defaultSsr: false,
   requestMiddleware: prerendering ? [csrfMiddleware] : [csrfMiddleware, clerkMiddleware()],
-  // Fail closed: every server function, including future ones, is owner-only.
-  functionMiddleware: [freshSession, ownerOnly],
+  // Fail closed: every server function, including future ones, needs a signed-in
+  // admin or invited member (admin-only functions add requireAdmin).
+  functionMiddleware: [freshSession, requireUser],
 }))

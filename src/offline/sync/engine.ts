@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { isRedirect } from '@tanstack/react-router'
 
-import { SYNC_PROTOCOL_MISMATCH } from '#/lib/schemas/sync'
+import { SYNC_PROTOCOL_MISMATCH, SYNC_WRONG_USER } from '#/lib/schemas/sync'
 
 import { countPending, setMeta } from '../db'
 import { loadLocalState } from '../store'
@@ -62,7 +62,8 @@ export async function refreshPending() {
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
 function classify(error: unknown): SyncPhase {
-  if (isRedirect(error)) return 'signed-out'
+  // Another account signed in on this device: the background check switches copies.
+  if (isRedirect(error) || message(error).startsWith(SYNC_WRONG_USER)) return 'signed-out'
   if (message(error).startsWith(SYNC_PROTOCOL_MISMATCH)) return 'update-required'
   if (!navigator.onLine || error instanceof TypeError) return 'offline'
   return 'error'

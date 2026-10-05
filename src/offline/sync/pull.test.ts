@@ -1,9 +1,9 @@
 import 'fake-indexeddb/auto'
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 
 import type { Keyset } from '../../lib/schemas/sync.ts'
-import { deleteLocalDb, getMeta, type LocalSession, openLocalDb } from '../db.ts'
+import { deleteLocalDb, getMeta, type LocalSession, openLocalDb, selectLocalDb } from '../db.ts'
 import { pull, type SyncTransport } from './pull.ts'
 
 const T0 = new Date('2026-10-01T08:00:00Z')
@@ -83,6 +83,11 @@ function fakeServer(opts: {
   }
   return { transport: transport as unknown as SyncTransport, calls }
 }
+
+// One person's copy (the guard picks it in the app).
+beforeAll(async () => {
+  await selectLocalDb('flashquizz-test')
+})
 
 afterEach(async () => {
   await deleteLocalDb()

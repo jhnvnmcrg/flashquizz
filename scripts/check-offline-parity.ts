@@ -1,16 +1,17 @@
 /**
  * Read-only check that the browser-side study logic (src/lib/study/*) gives the
- * same answers as today's SQL on the real database:
+ * same answers as today's SQL on the real database, for one person's progress:
  *   - tallies, candidate selection for every scope, day buckets, upcoming
  *     reviews and box counts must match exactly;
  *   - progress rebuilt from attempts + bookmarks is compared with the stored
  *     progress rows. The only expected differences are questions that were
  *     bookmarked and later un-bookmarked (that history was never recorded).
  *
- * Usage: npx tsx scripts/check-offline-parity.ts
+ * Usage: npx tsx scripts/check-offline-parity.ts [--user <clerk user id>]
+ * (defaults to the first admin in ADMIN_CLERK_USER_IDS / OWNER_CLERK_USER_IDS)
  */
 import { config } from 'dotenv'
-import { asc, desc, eq, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, sql } from 'drizzle-orm'
 
 config({ path: '.env', quiet: true })
 
@@ -23,6 +24,7 @@ const { STUDY_TIMEZONE } = await import('../src/lib/constants.ts')
 const { selectCandidates, retryIdsFrom } = await import('../src/lib/study/candidates.ts')
 const { topicTallies, dayKey, todayTotals, upcomingDue, boxCounts } = await import('../src/lib/study/stats.ts')
 const { foldAll } = await import('../src/lib/study/progress-fold.ts')
+const { parseAdminIds } = await import('../src/lib/access.ts')
 
 type IndexedQuestion = import('../src/lib/study/candidates.ts').IndexedQuestion
 type ProgressState = import('../src/lib/leitner.ts').ProgressState
@@ -33,6 +35,14 @@ const { questions, modules, sources, questionProgress, attempts, studySessions, 
 const db = getDb()
 const now = new Date()
 let failures = 0
+
+const flag = process.argv.indexOf('--user')
+const userId =
+  flag >= 0 ? process.argv[flag + 1] : parseAdminIds(process.env.ADMIN_CLERK_USER_IDS ?? process.env.OWNER_CLERK_USER_IDS)[0]
+if (!userId) {
+  console.error('Whose progress? Pass --user, or set ADMIN_CLERK_USER_IDS in .env.')
+  process.exit(1)
+}
 
 function check(label: string, ok: boolean, detail = '') {
   if (!ok) failures++
@@ -71,7 +81,7 @@ const index: IndexedQuestion[] = indexRows.map((r) => ({
   sortKey: [r.sourceSort, r.moduleSort, r.ordinal],
   eligible: r.eligible,
 }))
-const progressRows = await db.select().from(questionProgress)
+const progressRows = await db.select().from(questionProgress).where(eq(questionProgress.userId, userId))
 const progress = new Map<number, ProgressState & { questionId: number }>(progressRows.map((p) => [p.questionId, p]))
 console.log(
   `${index.length} questions (${index.filter((q) => q.eligible).length} eligible), ${progress.size} progress rows\n`,
@@ -79,7 +89,7 @@ console.log(
 
 // --- tallies ---
 const js = topicTallies(index, progress, now)
-const db_ = await sqlTallies()
+const db_ = await sqlTallies(userId)
 check('overall tally', sameJson(js.overall, db_.overall), JSON.stringify(js.overall))
 const mapEq = (a: Map<number, unknown>, b: Map<number, unknown>) =>
   a.size === b.size && [...a].every(([k, v]) => sameJson(v, b.get(k)))
@@ -102,7 +112,7 @@ const [lastWithMisses] = await db
   .select({ id: studySessionItems.sessionId })
   .from(studySessionItems)
   .innerJoin(studySessions, eq(studySessions.id, studySessionItems.sessionId))
-  .where(sql`${studySessionItems.isCorrect} is not true`)
+  .where(and(eq(studySessions.userId, userId), sql`${studySessionItems.isCorrect} is not true`))
   .orderBy(desc(studySessions.startedAt))
   .limit(1)
 let retryIds: Set<number> | undefined
@@ -116,7 +126,7 @@ if (lastWithMisses) {
 }
 for (const [label, f] of cases) {
   const mine = sortedIds(selectCandidates({ index, progress, filters: f, now, retryIds }))
-  const theirs = sortedIds(await sqlCandidates(f))
+  const theirs = sortedIds(await sqlCandidates(userId, f))
   check(`candidates: ${label}`, sameJson(mine, theirs), `${mine.length} vs ${theirs.length}`)
 }
 
@@ -129,10 +139,12 @@ const attemptRows = await db
     answeredAt: attempts.answeredAt,
   })
   .from(attempts)
+  .where(eq(attempts.userId, userId))
   .orderBy(asc(attempts.answeredAt))
 const sqlDays = await db
   .select({ day: sql<string>`to_char(date(${attempts.answeredAt} at time zone ${STUDY_TIMEZONE}), 'YYYY-MM-DD')` })
   .from(attempts)
+  .where(eq(attempts.userId, userId))
   .groupBy(sql`1`)
 const jsDays = [...new Set(attemptRows.map((a) => dayKey(a.answeredAt)))].sort()
 check(
@@ -149,7 +161,12 @@ const [sqlToday] = await db
     correct: sql<number>`count(*) filter (where ${attempts.isCorrect})::int`,
   })
   .from(attempts)
-  .where(sql`date(${attempts.answeredAt} at time zone ${STUDY_TIMEZONE}) = date(now() at time zone ${STUDY_TIMEZONE})`)
+  .where(
+    and(
+      eq(attempts.userId, userId),
+      sql`date(${attempts.answeredAt} at time zone ${STUDY_TIMEZONE}) = date(now() at time zone ${STUDY_TIMEZONE})`,
+    ),
+  )
 check('today totals', sameJson(todayTotals(attemptRows, now), sqlToday), JSON.stringify(sqlToday))
 
 // --- review hub: upcoming per day, box counts ---
@@ -159,14 +176,19 @@ const sqlUpcoming = await db
     n: sql<number>`count(*)::int`,
   })
   .from(questionProgress)
-  .where(sql`${questionProgress.box} > 0 and ${questionProgress.dueAt} > now() and ${questionProgress.dueAt} < now() + interval '14 days'`)
+  .where(
+    and(
+      eq(questionProgress.userId, userId),
+      sql`${questionProgress.box} > 0 and ${questionProgress.dueAt} > now() and ${questionProgress.dueAt} < now() + interval '14 days'`,
+    ),
+  )
   .groupBy(sql`1`)
   .orderBy(asc(sql`1`))
 check('upcoming reviews per day', sameJson(upcomingDue(progress.values(), now), sqlUpcoming), `${sqlUpcoming.length} days`)
 const sqlBoxes = await db
   .select({ box: questionProgress.box, n: sql<number>`count(*)::int` })
   .from(questionProgress)
-  .where(sql`${questionProgress.box} > 0`)
+  .where(and(eq(questionProgress.userId, userId), sql`${questionProgress.box} > 0`))
   .groupBy(questionProgress.box)
   .orderBy(asc(questionProgress.box))
 check('cards per box', sameJson(boxCounts(progress.values()), sqlBoxes), JSON.stringify(sqlBoxes))

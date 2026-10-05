@@ -16,10 +16,13 @@ function ForbiddenPage() {
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center gap-6 px-4 py-12">
       <Logo />
       <div>
-        <h1 className="text-2xl font-bold">This account can't open FlashQuizz</h1>
+        <h1 className="text-2xl font-bold">You don’t have access yet</h1>
         <p className="mt-2 text-muted-foreground">
-          FlashQuizz is private to its owner. If this is your reviewer, add the user ID below to{' '}
-          <code className="rounded bg-secondary px-1.5 py-0.5 text-sm">OWNER_CLERK_USER_IDS</code> in the environment
+          FlashQuizz is invite-only. Ask the owner for an invitation, then sign up from the link in the email.
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Setting up FlashQuizz yourself? Add the user ID below to{' '}
+          <code className="rounded bg-secondary px-1.5 py-0.5 text-sm">ADMIN_CLERK_USER_IDS</code> in the environment
           and restart the server.
         </p>
       </div>

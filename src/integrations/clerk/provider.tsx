@@ -4,6 +4,7 @@ export default function AppClerkProvider({ children }: { children: React.ReactNo
   return (
     <ClerkProvider
       signInUrl="/sign-in"
+      signUpUrl="/sign-up"
       afterSignOutUrl="/sign-in"
       appearance={{
         variables: {
