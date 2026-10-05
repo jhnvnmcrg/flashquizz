@@ -197,9 +197,9 @@ export const questionProgress = pgTable(
   'question_progress',
   {
     /** Clerk user ID: each person has their own progress. */
-    userId: text(),
+    userId: text().notNull(),
     questionId: integer()
-      .primaryKey()
+      .notNull()
       .references(() => questions.id, { onDelete: 'cascade' }),
     box: smallint().notNull().default(0),
     dueAt: timestamp({ withTimezone: true }),
@@ -214,13 +214,8 @@ export const questionProgress = pgTable(
     ...timestamps,
   },
   (t) => [
-    index('question_progress_due_idx').on(t.dueAt).where(sql`${t.box} > 0`),
-    index('question_progress_bookmarked_idx')
-      .on(t.bookmarkedAt)
-      .where(sql`${t.bookmarked}`),
-    // Sync cursor (devices pull progress changed since their last pull).
-    index().on(t.updatedAt, t.questionId),
-    uniqueIndex().on(t.userId, t.questionId),
+    primaryKey({ columns: [t.userId, t.questionId] }),
+    // Sync cursor (a person's devices pull progress changed since their last pull).
     index().on(t.userId, t.updatedAt, t.questionId),
   ],
 )
@@ -230,7 +225,7 @@ export const studySessions = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     /** Clerk user ID of the person who studied (session items belong through it). */
-    userId: text(),
+    userId: text().notNull(),
     mode: sessionMode().notNull(),
     status: sessionStatus().notNull().default('active'),
     filters: jsonb().$type<StudyFilters>().notNull(),
@@ -252,7 +247,6 @@ export const studySessions = pgTable(
       sql`${t.mode} <> 'exam' OR (${t.durationSec} IS NOT NULL AND ${t.expiresAt} IS NOT NULL)`,
     ),
     index().on(t.status, t.mode, t.startedAt.desc()),
-    index().on(t.updatedAt, t.id),
     index().on(t.userId, t.updatedAt, t.id),
   ],
 )
@@ -285,7 +279,7 @@ export const attempts = pgTable(
   {
     id: bigint({ mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     /** Clerk user ID of the person who answered. */
-    userId: text(),
+    userId: text().notNull(),
     questionId: integer()
       .notNull()
       .references(() => questions.id, { onDelete: 'cascade' }),
@@ -305,7 +299,6 @@ export const attempts = pgTable(
   (t) => [
     index().on(t.questionId, t.answeredAt.desc()),
     index().on(t.answeredAt),
-    index().on(t.createdAt, t.id),
     index().on(t.userId, t.createdAt, t.id),
   ],
 )
@@ -319,7 +312,7 @@ export const bookmarkEvents = pgTable(
   {
     clientId: uuid().primaryKey().defaultRandom(),
     /** Clerk user ID of the person who bookmarked. */
-    userId: text(),
+    userId: text().notNull(),
     questionId: integer()
       .notNull()
       .references(() => questions.id, { onDelete: 'cascade' }),

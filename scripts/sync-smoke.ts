@@ -171,16 +171,9 @@ try {
   check('B’s progress is B’s own', progressOf(intruder.progress, q3.view.id)?.seenCount === 1 && intruder.progress.length === 1)
   const aProgress = await progressSince(A, null, null)
   check('A’s progress untouched by B', aProgress.rows.length === 3 && !aProgress.rows.some((r) => r.questionId === q3.view.id))
-  const pk = (await db.execute(sql`
-    select a.attname from pg_index i join pg_attribute a on a.attrelid = i.indrelid and a.attnum = any(i.indkey)
-    where i.indrelid = 'question_progress'::regclass and i.indisprimary`)) as unknown as { rows: { attname: string }[] }
-  if (pk.rows.some((r) => r.attname === 'user_id')) {
-    const same = await push(B, { attempts: [attempt(q0.view.id, wrong(q0), T(12), { sessionId: null })] })
-    const [aP0] = await db.select().from(questionProgress).where(and(eq(questionProgress.userId, A), eq(questionProgress.questionId, q0.view.id)))
-    check('same question, separate progress', progressOf(same.progress, q0.view.id)?.seenCount === 1 && aP0.seenCount === 3, { b: progressOf(same.progress, q0.view.id)?.seenCount, a: aP0.seenCount })
-  } else {
-    console.log('- same question for both: skipped until migration 0003 (progress is still keyed by question alone)')
-  }
+  const same = await push(B, { attempts: [attempt(q0.view.id, wrong(q0), T(12), { sessionId: null })] })
+  const [aP0] = await db.select().from(questionProgress).where(and(eq(questionProgress.userId, A), eq(questionProgress.questionId, q0.view.id)))
+  check('same question, separate progress', progressOf(same.progress, q0.view.id)?.seenCount === 1 && aP0.seenCount === 3, { b: progressOf(same.progress, q0.view.id)?.seenCount, a: aP0.seenCount })
 
   // 8. Manifest + content.
   const [held] = await db.select({ id: questions.id }).from(questions).where(eq(questions.status, 'needs_review')).limit(1)
