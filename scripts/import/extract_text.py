@@ -34,6 +34,27 @@ SOURCES = {
     "m6fc": {"file": "M6 Final Coaching - Rationale.pdf", "module": "m6", "answer": "label"},
     "m4pt": {"file": "MODULE-4-POST-TEST-RATIONALE.pdf", "module": "m4", "answer": "letter"},
     "m4compre": {"file": "gdrive/M4- MANOR Compre Rationale.pdf", "module": "m4", "answer": "label"},
+    # reviewer/manor (October 2026 Comprehensive Exams and Drills; M4 of each was already imported)
+    "m1compre": {"file": "manor/Compre 2026/M1 - MANOR Compre Rationale.pdf", "module": "m1", "answer": "label"},
+    "m2compre": {"file": "manor/Compre 2026/M2 - MANOR Compre Rationale.pdf", "module": "m2", "answer": "label"},
+    "m3compre": {"file": "manor/Compre 2026/M3 - MANOR Compre Rationale.pdf", "module": "m3", "answer": "label"},
+    "m5compre": {"file": "manor/Compre 2026/M5 - MANOR Compre Rationale.pdf", "module": "m5", "answer": "label"},
+    "m6compre": {"file": "manor/Compre 2026/M6 - MANOR Compre Rationale.pdf", "module": "m6", "answer": "label"},
+    "m1drill": {"file": "manor/Drills 2026/M1 - MANOR Drills Rationale.pdf", "module": "m1", "answer": "label"},
+    "m2drill": {"file": "manor/Drills 2026/M2 - MANOR Drills Rationale.pdf", "module": "m2", "answer": "label"},
+    "m3drill": {"file": "manor/Drills 2026/M3 - MANOR Drills Rationale.pdf", "module": "m3", "answer": "label"},
+    "m5drill": {"file": "manor/Drills 2026/M5 - MANOR Drills Rationale.pdf", "module": "m5", "answer": "label"},
+    # A few M6 answers are a bare "C. …" with no "Answer:" label.
+    "m6drill": {"file": "manor/Drills 2026/M6 - MANOR Drills Rationale.pdf", "module": "m6", "answer": "label", "bareAnswer": True},
+    # Reference only: the printed key and rationale for the m4drill questions
+    "m4drillkey": {"file": "manor/Drills 2026/M4 - MANOR Drills Rationale.pdf", "module": "m4", "answer": "label"},
+    # April 2026 Final Pre-boards, all six modules in one file
+    "fpbapr": {
+        "file": "manor/Manor Compilation/FPB (April 2026).pdf",
+        "module": None,
+        "answer": "label",
+        "headingMax": 60,  # "MODULE 1- PHARMACIST LICENSURE EXAMINATION"
+    },
 }
 
 FLAGS = pymupdf.TEXTFLAGS_DICT | pymupdf.TEXT_COLLECT_STYLES
@@ -42,6 +63,7 @@ STRIKE = 1
 QUESTION_START = re.compile(r"^\s*(\d{1,3})\s*\.(?!\d)\s*(\S.*)?$")
 ANSWER_LABEL = re.compile(r"^\s*\.?\s*Answer\s*[:.]?\s*(.*)$", re.I)
 ANSWER_LETTER = re.compile(r"^\s*([A-E])\s*$")
+BARE_ANSWER = re.compile(r"^\s*([A-E])\.\s*\S")
 MODULE_HEADING = re.compile(r"^\s*Module\s+([1-6])\b", re.I)
 BOILERPLATE = re.compile(
     r"^\s*(Question|Rationale|Question\s+Rationale|Answer|MODULE 4 Pharmacology|MODULE 4 POST TEST|"
@@ -175,7 +197,12 @@ def segment(source: str, cfg: dict) -> list[Block]:
 
         text = it.text
         heading = MODULE_HEADING.match(text)
-        if cfg["module"] is None and heading and not is_right(it, marks, fallback) and len(text.strip()) < 40:
+        if (
+            cfg["module"] is None
+            and heading
+            and not is_right(it, marks, fallback)
+            and len(text.strip()) < cfg.get("headingMax", 40)
+        ):
             module = f"m{heading.group(1)}"
             current = None
             ordinal = 0
@@ -215,6 +242,10 @@ def segment(source: str, cfg: dict) -> list[Block]:
                 if am and not current.answer_seen:
                     current.answer_seen = True
                     current.answer_raw = am.group(1).strip()
+                elif cfg.get("bareAnswer") and not current.answer_seen and not current.rationale and BARE_ANSWER.match(text):
+                    # The first line of the rationale column is the answer itself.
+                    current.answer_seen = True
+                    current.answer_raw = text.strip()
             else:
                 am = ANSWER_LETTER.match(text)
                 if am and not current.answer_seen:
@@ -275,7 +306,9 @@ def write(source: str, blocks: list[Block]) -> None:
     out = RAW_DIR / f"{source}.jsonl"
     with out.open("w", encoding="utf-8") as fh:
         for b in blocks:
-            ref = f"{source}:{b.module}:{b.ordinal:03d}" if source == "pb1" else f"{source}:{b.ordinal:03d}"
+            # Multi-module sources number per module, so the module is part of the id.
+            multi = SOURCES[source]["module"] is None
+            ref = f"{source}:{b.module}:{b.ordinal:03d}" if multi else f"{source}:{b.ordinal:03d}"
             images = []
             for n, (role, img) in enumerate(b.images, start=1):
                 name = f"{ref.replace(':', '_')}-{n}.{img.ext}"

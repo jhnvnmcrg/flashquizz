@@ -284,6 +284,126 @@ table, typed a–d/e choices, a diagonal MANOR watermark to ignore).
 - `sourceRef` `<source>:<nnn>` (printed number), `ordinal` = printed number,
   `sourcePage` = page.
 
+## reviewer/manor sources (October 2026 Comprehensive Exams, Drills, April 2026 FPB)
+
+Typed text PDFs with a printed `Answer:` line and a rationale for every item,
+the same layout as `m4compre`. Read the blocks with
+`py -3.12 scripts/import/show_raw.py <source> --from 1 --to 25` (add
+`--module m3` for `fpbapr`). The key is the printed answer → keyed, `auto`
+(answer rules 2–4 still apply).
+
+| source | name / shortName | module |
+|---|---|---|
+| `m1compre`, `m2compre`, `m3compre`, `m5compre`, `m6compre` | "M1 Comprehensive Exam" / "M1 Compre" (same pattern per module) | m1 … m6 |
+| `m1drill`, `m2drill`, `m3drill`, `m5drill`, `m6drill` | "M1 Drills" / "M1 Drill" (same pattern) | m1 … m6 |
+| `fpbapr` | "Final Pre-boards (April 2026)" / "FPB Apr" | all six; the module is in each raw block |
+
+- `sourceRef` = the raw block's `sourceRef` (`m2compre:014`, `fpbapr:m3:027`).
+  `ordinal` = the raw `ordinal`; `printedNumber` = the raw `printedNo`
+  (`fpbapr` numbers run 1–600 across the modules, so M3's first item is
+  printed "201" with ordinal 1); `sourcePage` = the raw `page`.
+- Strip page furniture that lands inside blocks: `, MANOR`, `OCT 2026`,
+  `MODULE n: …`, `Drills`, `Comprehensive Exam`, `Question`, `Rationale`,
+  `Contributors:`, `<<`, stray `ִ`, `READ!` notes.
+- **fpbapr** choices sometimes come out lettered E–H (or F–J) because of a list
+  numbering glitch; they are really A–D/E in order. Re-letter them by position;
+  the `Answer:` letter refers to that position (choices E–H with "Answer: D"
+  → the 4th choice → D).
+- Rationale tables arrive one cell per line; rebuild them as Markdown tables
+  when the columns are clear (header row first), otherwise as bullets.
+- Items the extraction lost: if a printed number is missing from your range
+  (the raw block before it holds two questions, or a shared case continues
+  into the next item), split it out and give it the next `sourceRef` ordinal
+  that is free **after the source's last block** (e.g. `m6drill:097`…); set
+  `printedNumber` to the printed number and `ordinal` to the printed number.
+  Check the page image (`data/pages/m6drill/`, `data/pages/fpbapr/`, `p###.jpg`
+  = the raw `page`) to get the text, choices and answer right.
+- Images: each block lists its extracted images under `data/images/<source>/`.
+  Look at each before attaching it (structures, tables, figures that the stem
+  or the rationale needs). Rationale-column images that only restate the typed
+  rationale can be skipped.
+
+## November 2024 papers (reviewer/manor/Manor Compilation, "Maam D")
+
+Scanned Manor papers from the November 2024 review season, annotated by a
+student, one PDF per module, rendered to `data/pages/drill24-m1/` … `drill24-m6/`
+(`p###.jpg` = page in that module's PDF). Each PDF holds several papers;
+`data/pages/drill24-survey.json` lists every paper's page range, numbering,
+how its key is marked, and page problems (duplicate scans, sticky notes,
+out-of-order pages). Read your paper's entry first.
+
+| source | name / shortName | papers |
+|---|---|---|
+| `n24drill` | "November 2024 Drills" / "Nov24 Drill" | Drills |
+| `n24compre` | "November 2024 Comprehensive Exam" / "Nov24 Compre" | Comprehensive Exam |
+| `n24pb` | "November 2024 Pre-board" / "Nov24 PB" | Pre-Board Exam |
+| `n24fpb` | "November 2024 Final Pre-board" / "Nov24 FPB" | Final Pre-Boards |
+
+- `sourceRef` `<source>:<module>:<nnn>` with the printed number
+  (`n24compre:m3:045`); a number printed twice → the second copy is
+  `<nnn>-2`. `printedNumber` = printed number, `ordinal` = printed number,
+  `sourcePage` = the page number in that module's folder.
+- Output: `data/questions/<source>-<module>-1.json` … `-4.json` (printed
+  1–25, 26–50, 51–75, 76–100). Keep shared-case groups inside one file.
+- **Key** = the paper's answer highlighter colour on one choice (the survey
+  names the colour; it can change partway through a paper). **Not keys:** the
+  paper's keyword colour on stem words, pen circles / ticks / letters (the
+  student's own attempts, often wrong), strike-throughs. Keyed → `auto`.
+- Two choices in the answer colour → `answerKey` null (or the clearly
+  intended one, e.g. a roman-combo item where statement lines are also
+  highlighted but only one choice is), `multiple_answers`, `needs_review`.
+- **No answer highlight** (the survey lists the unkeyed stretches) → work the
+  answer out as in "Unkeyed sources": `ai_answer`, `needs_review`, a
+  `reviewNote` saying so and what the student's pen mark was.
+- **Rationale:** transcribe the legible, relevant handwritten notes as short
+  bullets (`ocr_uncertain` if you guessed words). If there are no usable
+  notes, write a short rationale yourself (1–3 bullets on why the key is
+  right) and say "Rationale written by Claude; no notes on the paper." in
+  `reviewNote` (status stays `auto` for keyed items).
+- Duplicate scans (the same page photographed twice with sticky notes moved):
+  read the copies together and enter each item once. Text hidden under a
+  sticky note: use the other copy; if no copy shows it, `ocr_uncertain` and
+  `needs_review`.
+- Figures (structures, prescriptions, tables) needed to answer: crop them
+  into `data/images/<source>/` with `scripts/import/crop_image.py` (name
+  `<source>_<module>_<nnn>-1.png`), check the crop, attach with role `stem`.
+- A question repeated within the same paper → `duplicateOfRef` the earlier
+  copy (`duplicate` flag). Cross-source repeats are handled later.
+
+## Filling keys from a better-marked copy
+
+`reviewer/manor` holds better-marked copies of papers already imported, so
+answers Claude worked out (`ai_answer`) can be replaced by the source key:
+
+| questions | copy (page images) | the key is marked as |
+|---|---|---|
+| `m1fc` | `data/pages/m1fc-manor/` (12 spreads: notes, paper, notes) | red circle on the letter / yellow highlight on the choice |
+| `m4fc` | `data/pages/m4fc-manor/` | same as m1fc |
+| `m5fc` | `data/pages/m5fc-manor/` (279 lecture slides; question slides show the printed number) | the highlighted choice on the question slide |
+| `m5fpb` | `data/pages/m5fpb-manor/` (8 spreads) | circled letter / yellow highlight on the choice |
+| `m4drill` | `py -3.12 scripts/import/show_raw.py m4drillkey` (typed, same 100 items) | the printed `Answer:` line, with a rationale |
+
+Rules:
+- Touch only questions flagged `ai_answer`, and skip any the owner already
+  edited in the app (the task lists them). Match by printed number, and check
+  the stem and choices really are the same question.
+- Marked key **equals** the current key → keep it, drop `ai_answer`, and set
+  `status: auto` unless another review reason is still open (e.g.
+  `image_required`). `reviewNote`: "Key confirmed by the annotated Manor copy
+  (B circled)."
+- Marked key **differs** → set `answerKey` to the marked key, drop
+  `ai_answer`, keep `status: needs_review`, and say in `reviewNote` what the
+  copy marks, what the earlier worked-out answer was, and which one you think
+  is right and why. Add `answer_disputed` if you still think the marked key is
+  wrong.
+- Not marked, or ambiguous (two marks, mark and circle disagree) → leave the
+  question as it is.
+- Append how the copy marks it to `raw.answer` (e.g. "; Manor copy: C circled").
+- `m4drill`: also replace the rationale Claude wrote with the source's
+  rationale (cleaned Markdown, per the field rules) when the source has one,
+  and move memory aids to `mnemonic`.
+- Change nothing else: not the stem, choices, refs, order or other questions.
+
 **Lecture notes** (`lectures` "Lecture notes"): `data/pages/rheum/` (12 slides,
 rheumatology drugs) and `data/raw/m1handout.txt` + `data/pages/m1handout/`
 (Module 1 pharmaceutical chemistry handout). Write questions following the

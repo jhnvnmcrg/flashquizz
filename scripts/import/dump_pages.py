@@ -44,6 +44,21 @@ SOURCES = {
     "fpbq-m4": {"file": "gdrive/Final preboards -M4.pdf", "zoom": 2.5},
     "fpbq-m5": {"file": "gdrive/Final preboards-M5.pdf", "zoom": 2.5},
     "fpbq-m6": {"file": "gdrive/Final preboards-M6.pdf", "zoom": 2.5},
+    # reviewer/manor: page images for text sources whose layout loses a few items
+    "m6drill": {"file": "manor/Drills 2026/M6 - MANOR Drills Rationale.pdf", "zoom": 1.5},
+    "fpbapr": {"file": "manor/Manor Compilation/FPB (April 2026).pdf", "zoom": 1.5},
+    # Better-marked copies of papers already imported, used to fill in answer keys
+    "m1fc-manor": {"file": "manor/Final Coaching 2026/M1 FC.pdf", "zoom": 2.0},
+    "m4fc-manor": {"file": "manor/Final Coaching 2026/M4 FC.pdf", "zoom": 2.0},
+    "m5fc-manor": {"file": "manor/Final Coaching 2026/M5 FC.pdf", "zoom": 1.0},
+    "m5fpb-manor": {"file": "manor/Final PB 2026/M5 FPB.pdf", "zoom": 2.0},
+    # November 2024 Drills (scanned, the key highlighted), one file per module
+    "drill24-m1": {"file": "manor/Manor Compilation/Manor Prac Questionnaires (M1 - Maam D).pdf", "zoom": 0.65},
+    "drill24-m2": {"file": "manor/Manor Compilation/Manor Prac Questionnaires (M2 - Maam D).pdf", "zoom": 0.65},
+    "drill24-m3": {"file": "manor/Manor Compilation/Manor Prac Questionnaires (M3 - Maam D).pdf", "zoom": 0.65},
+    "drill24-m4": {"file": "manor/Manor Compilation/Manor Prac Questionnaires (M4 - Maam D).pdf", "zoom": 0.65},
+    "drill24-m5": {"file": "manor/Manor Compilation/Manor Prac Questionnaires (M5 - Maam D).pdf", "zoom": 0.65},
+    "drill24-m6": {"file": "manor/Manor Compilation/Manor Prac Questionnaires (M6 - Maam D).pdf", "zoom": 0.65},
 }
 
 
